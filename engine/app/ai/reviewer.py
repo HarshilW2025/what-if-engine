@@ -2,6 +2,8 @@
 It audits the model and recomputes headline numbers as plain formulas, which we evaluate ourselves."""
 import ast
 import json
+
+from app.ai.apiopts import api_create
 import logging
 import math
 import operator as op
@@ -144,7 +146,7 @@ def review(client, model: str, question: str, code: str, scene: dict) -> dict | 
             f"Headline numbers it reported:\n{json.dumps(nums, indent=1)}\n\n"
             f"Its self checks:\n{json.dumps(checks, indent=1)}\n\nAnswer text: {scene.get('answer', '')}"
         )
-        resp = client.messages.create(
+        resp = api_create(client, 
             model=model, max_tokens=4000, system=system, tools=[REVIEW_TOOL], tool_choice={"type": "auto"},
             messages=[{"role": "user", "content": user}],
         )
@@ -234,7 +236,7 @@ def review_orbits(client, model: str, question: str, spec_input: dict, res: dict
     try:
         user = (f"Question: {question}\n\nSetup the other model chose:\n{json.dumps(spec_input, indent=1)}\n\n"
                 f"What the integrator produced:\n{json.dumps(orbit_summary(res), indent=1)}")
-        resp = client.messages.create(
+        resp = api_create(client, 
             model=model, max_tokens=3000, system=ORBIT_SYSTEM, tools=[ORBIT_TOOL], tool_choice={"type": "auto"},
             messages=[{"role": "user", "content": user}],
         )

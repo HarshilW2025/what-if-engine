@@ -1,5 +1,7 @@
 import copy
 import json
+
+from app.ai.apiopts import api_create
 import logging
 import os
 
@@ -82,7 +84,7 @@ def _tools() -> list[dict]:
 
 def _call(client: Anthropic, messages: list[dict]):
     try:
-        return client.messages.create(
+        return api_create(client, 
             model=MODEL,
             max_tokens=16000,
             system=[{"type": "text", "text": COMPOSER_SYSTEM, "cache_control": {"type": "ephemeral"}}],

@@ -22,7 +22,7 @@ def one(q: str) -> str:
         bad = [c["name"][:200] for c in checks if not c.get("passed")]
         rv = m.get("review") or {}
         lines = [f"[OK ] {time.time() - t0:4.0f}s  {q}",
-                 f"      {m.get('route')} | attempts {m.get('attempts')} | checks {len(checks) - len(bad)}/{len(checks)} | review {rv.get('status', 'none')} | {out['spec'].get('title')}"]
+                 f"      {m.get('route')} | attempts {m.get('attempts')} | checks {len(checks) - len(bad)}/{len(checks)} | review {rv.get('status', 'none')} | out tokens {m.get('output_tokens')} | {out['spec'].get('title')}"]
         lines += [f"      FAILED: {b}" for b in bad] + [f"      REVIEW: {p[:250]}" for p in rv.get("problems", [])]
         return "\n".join(lines)
     except Exception as e:

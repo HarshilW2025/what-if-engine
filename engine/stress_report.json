@@ -1,0 +1,1160 @@
+[
+ {
+  "group": "basic",
+  "question": "What if the Sun suddenly disappeared?",
+  "want_tier": [
+   "exact"
+  ],
+  "tier": "exact",
+  "title": "The Sun vanishes: Earth keeps orbiting for 8.3 minutes, then flies straight",
+  "route": "write_model",
+  "engine": "scene",
+  "attempts": 1,
+  "checks_passed": 6,
+  "checks_total": 6,
+  "failed_checks": [],
+  "review": "pass",
+  "review_problems": [],
+  "answer": "For 499 seconds (8.3 minutes) nothing would change: the Sun would still look bright and Earth would keep circling, because light and gravity both travel at the speed of light. Then the sky would go dark and Earth would fly off in a straight line at 29.8 km/s. After a year it would be 6.4 AU away from where the Sun was, and Jupiter would notice only after 43.3 minutes.",
+  "assumptions": [
+   "Earth and Jupiter start on circular orbits in a plane; other planets are ignored.",
+   "The Sun's mass-energy vanishes at t=0 with no other effects (this violates energy conservation, so it is a pure thought experiment).",
+   "Gravity changes propagate at c, as in general relativity (confirmed by GW170817).",
+   "Earth's orbit is treated as circular at 1 AU; Jupiter's at 5.2026 AU.",
+   "Bodies are drawn larger than true size so they are visible.",
+   "After news arrives, planets move in straight lines with no other forces.",
+   "The yellow shell is hidden after it passes beyond Jupiter's orbit to keep the scene framed."
+  ],
+  "theories": [],
+  "status": "OK",
+  "notes": [],
+  "seconds": 58
+ },
+ {
+  "group": "basic",
+  "question": "What if the Earth were twice as big?",
+  "want_tier": [
+   "exact"
+  ],
+  "tier": "exact",
+  "title": "Earth with twice the radius: 8x the mass, 2x the gravity",
+  "route": "write_model",
+  "engine": "scene",
+  "attempts": 1,
+  "checks_passed": 8,
+  "checks_total": 8,
+  "failed_checks": [],
+  "review": "pass",
+  "review_problems": [],
+  "answer": "If Earth had twice the radius and the same density, it would have 8 times the mass and surface gravity of 19.6 m/s^2, double today's. A 70 kg person would weigh 1375 N instead of 687 N, and escape speed would rise to 22.4 km/s, so leaving the planet would be far harder. A satellite skimming the surface would still circle in 97.3 min, because that depends only on density.",
+  "assumptions": [
+   "Twice as big means twice the radius with the same average density as Earth.",
+   "Mass therefore scales with radius cubed, so 8 times Earth's mass.",
+   "Composition, spin rate and the Sun and Moon are left as they are; only the planet is scaled.",
+   "Satellites skim just above each surface in circular orbits, integrated with Newtonian gravity.",
+   "Surface gravity is computed for a uniform sphere, ignoring rotation and higher compression."
+  ],
+  "theories": [],
+  "status": "OK",
+  "notes": [],
+  "seconds": 38
+ },
+ {
+  "group": "basic",
+  "question": "What if the Earth stopped spinning?",
+  "want_tier": [
+   "exact"
+  ],
+  "tier": "exact",
+  "title": "What if the Earth suddenly stopped spinning?",
+  "route": "write_model",
+  "engine": "scene",
+  "attempts": 1,
+  "checks_passed": 7,
+  "checks_total": 7,
+  "failed_checks": [],
+  "review": "pass",
+  "review_problems": [],
+  "answer": "If the ground stopped instantly, the air and oceans would not: at the equator the atmosphere would keep moving at 465 m/s, faster than sound, and would still be moving at 132 m/s six hours later. Removing the spin takes out 2.14e+29 J of rotational energy, and a day would last 365.26 days because the Sun would cross the sky once per orbit. Over time the oceans would flow poleward, retreating about 7.1 km at the equator and rising about 14.2 km at the poles.",
+  "assumptions": [
+   "The solid Earth stops instantly while air and water keep their old velocity.",
+   "Atmosphere drag is bulk quadratic drag on a 10 km column with Cd = 0.0025.",
+   "Pressure gradients and weather are ignored in the wind decay.",
+   "Earth's interior is treated as having C/(Ma^2) = 0.3307 for energy and flattening.",
+   "Oceans relax to a sphere of equal volume; the solid crust stays bulged.",
+   "Air parcels are drawn 250 km above the surface so they can be seen.",
+   "The magnetic dynamo and the Moon's tides are not modelled."
+  ],
+  "theories": [],
+  "status": "OK",
+  "notes": [],
+  "seconds": 86
+ },
+ {
+  "group": "basic",
+  "question": "What if the Moon disappeared?",
+  "want_tier": [
+   "exact"
+  ],
+  "tier": "exact",
+  "title": "What if the Moon vanished? Tides, wobble and orbit",
+  "route": "write_model",
+  "engine": "scene",
+  "attempts": 1,
+  "checks_passed": 6,
+  "checks_total": 6,
+  "failed_checks": [],
+  "review": "pass",
+  "review_problems": [],
+  "answer": "If the Moon vanished, Earth would keep orbiting the Sun almost exactly as before, because the Sun holds Earth, not the Moon. The big change is the tides: the Moon makes roughly 0.53 m of the ocean tide and the Sun only 0.25 m, so tides would shrink to about 31% of today's biggest, with no spring and neap cycle. Earth would also stop its 4668 km monthly wobble about the Earth-Moon barycentre, and over millions of years its tilt could become unstable.",
+  "assumptions": [
+   "Earth and Moon start on circular orbits around their common barycentre.",
+   "The Moon vanishes instantly and without any other effect.",
+   "Tides use the equilibrium tide model (no coastlines or ocean resonance).",
+   "Sun's pull on the orbit is ignored over 60 days; display frame is the barycentre's frame.",
+   "Spring-neap envelope uses a 29.53 day synodic month.",
+   "Long-term tilt and day-length effects are described qualitatively."
+  ],
+  "theories": [],
+  "status": "OK",
+  "notes": [],
+  "seconds": 49
+ },
+ {
+  "group": "basic",
+  "question": "What if you dropped a bowling ball and a feather on the Moon?",
+  "want_tier": [
+   "exact"
+  ],
+  "tier": "exact",
+  "title": "Bowling ball and feather dropped on the Moon",
+  "route": "write_model",
+  "engine": "scene",
+  "attempts": 1,
+  "checks_passed": 6,
+  "checks_total": 6,
+  "failed_checks": [],
+  "review": "pass",
+  "review_problems": [],
+  "answer": "They hit the ground at the same instant. With no air on the Moon, gravity is the only force, and it accelerates every mass equally at 1.62 m/s\u00b2. Dropped from 1.6 m, both fall for 1.40 s and land at 2.28 m/s. Apollo 15 astronaut David Scott showed this in 1971 with a hammer and a falcon feather.",
+  "assumptions": [
+   "No atmosphere on the Moon, so there is no drag.",
+   "Drop height 1.6 m from rest, near the lunar surface.",
+   "Bowling ball 7 kg, 21.8 cm across; feather 5 g (drawn larger for visibility).",
+   "Uniform gravity over the short drop."
+  ],
+  "theories": [],
+  "status": "OK",
+  "notes": [],
+  "seconds": 30
+ },
+ {
+  "group": "basic",
+  "question": "What if Earth orbited twice as far from the Sun?",
+  "want_tier": [
+   "exact"
+  ],
+  "tier": "exact",
+  "title": "Earth at twice the distance: a 2 AU orbit",
+  "route": "simulate_orbits",
+  "engine": "gravity",
+  "attempts": 1,
+  "checks_passed": 1,
+  "checks_total": 1,
+  "failed_checks": [],
+  "review": "pass",
+  "review_problems": [],
+  "answer": "",
+  "assumptions": [
+   "Earth starts on a circular orbit at 2 AU with speed 2*pi/sqrt(2) = 4.443 AU/yr.",
+   "Only the Sun and Earth are included; Jupiter and the Moon change the orbit by well under 1%.",
+   "The Sun is given a tiny recoil velocity so the system's total momentum is zero.",
+   "Orbit period follows Kepler's third law: sqrt(2^3) = 2.83 years, so a year would be 2.83 times longer.",
+   "Sunlight at 2 AU is one quarter as intense, which would cool Earth, but this run models gravity only."
+  ],
+  "theories": [],
+  "status": "OK",
+  "notes": [],
+  "seconds": 9
+ },
+ {
+  "group": "basic",
+  "question": "What if you fired a cannonball sideways at 8 km/s?",
+  "want_tier": [
+   "exact"
+  ],
+  "tier": "exact",
+  "title": "Newton's cannonball: fired sideways at 8 km/s",
+  "route": "write_model",
+  "engine": "scene",
+  "attempts": 1,
+  "checks_passed": 8,
+  "checks_total": 8,
+  "failed_checks": [],
+  "review": "pass",
+  "review_problems": [],
+  "answer": "The ball does not come down. At 8.0 km/s it is slightly faster than the 7.91 km/s circular orbit speed, so it falls around the curve of Earth and climbs to about 299 km altitude on the far side. It returns to the cannon after 87.3 min, forever in a vacuum. In reality, air at sea level would burn it up in seconds, and it would need 11.2 km/s to escape Earth entirely.",
+  "assumptions": [
+   "Airless Earth: no drag, so the ball does not burn up.",
+   "Earth is a non-rotating perfect sphere with point-mass gravity.",
+   "Fired exactly horizontally from the surface, ignoring mountains.",
+   "Cannonball drawn enlarged for visibility.",
+   "Only Earth's gravity acts; the Moon and Sun are ignored."
+  ],
+  "theories": [],
+  "status": "OK",
+  "notes": [],
+  "seconds": 37
+ },
+ {
+  "group": "basic",
+  "question": "What if Mars collided with Earth?",
+  "want_tier": [
+   "exact"
+  ],
+  "tier": "exact",
+  "title": "Mars slams into Earth at 45 degrees",
+  "route": "write_model",
+  "engine": "scene",
+  "attempts": 3,
+  "checks_passed": 5,
+  "checks_total": 5,
+  "failed_checks": [],
+  "review": "pass",
+  "review_problems": [],
+  "answer": "Mars would hit Earth at about 10.7 km/s, releasing roughly 3.3 x10^31 J, which is 15% of Earth's gravitational binding energy. That is enough to melt and vaporise much of the planet, with an upper-bound heating of roughly 5057 K if none of the energy escaped as light. Most of Mars would merge into Earth, which would spin once every roughly 3.2 h in a rough estimate. A similar Mars-sized impact is thought to have formed the Moon.",
+  "assumptions": [
+   "Mars and Earth approach on an exact two-body hyperbolic orbit with 5 km/s speed at infinity.",
+   "The contact angle is 45 degrees, the most probable angle for a random collision.",
+   "Both bodies are uniform spheres. Earth's recoil and tides are ignored in the debris picture.",
+   "At contact Mars becomes 2500 test fragments spread through its volume. The collision is inelastic: fragments take the shared momentum velocity (Mars mass over total mass times the relative velocity) plus 2 km/s random shock scatter per axis.",
+   "Fragments then move in Earth's gravity and stick if they reach Earth's surface. The debris is qualitative and is not a hydrodynamic (SPH) calculation, so no debris percentage is quoted.",
+   "Heating spreads all the impact energy evenly through the combined mass with specific heat 1000 J/kg/K. It is an order-of-magnitude upper bound because much energy is radiated away and rock vaporises.",
+   "The new day length assumes all of Mars's mass and angular momentum joins Earth, with moment of inertia factor 0.33 and radius unchanged. It is rough, since a real impact would also eject material.",
+   "Debris colour temperature starts at 3000 K and cools as t^(-1/3). It is illustrative only."
+  ],
+  "theories": [],
+  "status": "WARN",
+  "notes": [
+   "needed 3 attempts"
+  ],
+  "seconds": 272
+ },
+ {
+  "group": "basic",
+  "question": "What if the Sun were replaced by a black hole of the same mass?",
+  "want_tier": [
+   "exact"
+  ],
+  "tier": "exact",
+  "title": "Sun swapped for a 1 solar mass black hole: do orbits change?",
+  "route": "simulate_orbits",
+  "engine": "gravity",
+  "attempts": 1,
+  "checks_passed": 1,
+  "checks_total": 1,
+  "failed_checks": [],
+  "review": "pass",
+  "review_problems": [],
+  "answer": "",
+  "assumptions": [
+   "Black hole has exactly 1 solar mass, so its Schwarzschild radius is only about 2.95 km.",
+   "Planets start on circular orbits at their real distances, spread at different angles.",
+   "Newtonian point-mass gravity; far from the hole, general relativity gives the same orbits to high accuracy.",
+   "The Sun's light and heat vanish, so Earth would freeze, but that is not simulated here.",
+   "Solar wind, radiation pressure and the Sun's mass loss are ignored."
+  ],
+  "theories": [],
+  "status": "OK",
+  "notes": [],
+  "seconds": 15
+ },
+ {
+  "group": "basic",
+  "question": "What if you travelled at 90% of the speed of light for a year?",
+  "want_tier": [
+   "exact"
+  ],
+  "tier": "exact",
+  "title": "One year of ship time at 90% of light speed",
+  "route": "write_model",
+  "engine": "scene",
+  "attempts": 2,
+  "checks_passed": 6,
+  "checks_total": 6,
+  "failed_checks": [],
+  "review": "pass",
+  "review_problems": [],
+  "answer": "If your own clock reads 1.00 yr at 0.9c, about 2.29 yr pass on Earth, because time dilation has a Lorentz factor of 2.29. You cover 2.06 ly as measured from Earth, which is less than half the way to Alpha Centauri. Every kilogram of you carries 1.16e+17 J of kinetic energy, and the light ahead is blueshifted by 4.36x.",
+  "assumptions": [
+   "Interpreted as one year on the traveller's own clock; the Earth-frame figures are also given.",
+   "The ship reaches 0.9c instantly; acceleration and deceleration are ignored.",
+   "Straight-line coasting in a flat inertial frame (special relativity only).",
+   "Interstellar gas and dust are ignored, though at 0.9c they would be very hazardous.",
+   "Earth, the star and the ship are drawn larger than true scale so they are visible in light years.",
+   "Alpha Centauri is treated as stationary at 4.37 ly."
+  ],
+  "theories": [],
+  "status": "OK",
+  "notes": [],
+  "seconds": 52
+ },
+ {
+  "group": "theory",
+  "question": "How will the universe end?",
+  "want_tier": [
+   "theory"
+  ],
+  "tier": "theory",
+  "title": "How will the universe end? Expansion, rip or decay",
+  "route": "write_model",
+  "engine": "scene",
+  "attempts": 1,
+  "checks_passed": 7,
+  "checks_total": 7,
+  "failed_checks": [],
+  "review": "pass",
+  "review_problems": [],
+  "answer": "The best-supported answer is that the universe keeps expanding forever. Dark energy makes the expansion exponential, so within 100 Gyr space is 321 times bigger, and every galaxy beyond about 16.7 Gly is lost for good. Stars then burn out and black holes evaporate, leaving a cold, dark, nearly empty heat death. Less favoured endings are a Big Rip 22.7 Gyr from now if dark energy were phantom (w = -1.5), or a vacuum decay with an estimated lifetime of about 1e139 years.",
+  "assumptions": [
+   "Flat universe with Planck 2018 parameters: H0 = 67.4 km/s/Mpc, Omega_m = 0.315, Omega_DE = 0.685.",
+   "The main scene assumes dark energy is a constant (w = -1).",
+   "Galaxies are placed at random in a 40 Gly ball and follow the Hubble flow; they leave the view beyond 80 Gly.",
+   "The Local Group is shown as bound and not expanding.",
+   "The Big Rip number uses w = -1.5 with the same equations, but is not drawn.",
+   "Vacuum decay, proton decay and cyclic pictures are described from the theory cards, not simulated."
+  ],
+  "theories": [
+   {
+    "name": "The far future: heat death and proton decay",
+    "support": "mainstream-candidate",
+    "card": "far-future",
+    "simulated": true
+   },
+   {
+    "name": "Big Rip (phantom dark energy)",
+    "support": "minority",
+    "card": "big-rip",
+    "simulated": false
+   },
+   {
+    "name": "Vacuum decay",
+    "support": "mainstream-candidate",
+    "card": "vacuum-decay",
+    "simulated": false
+   },
+   {
+    "name": "Conformal cyclic cosmology",
+    "support": "minority",
+    "card": "conformal-cyclic-cosmology",
+    "simulated": false
+   },
+   {
+    "name": "Ekpyrotic and cyclic universe",
+    "support": "significant-minority",
+    "card": "ekpyrotic-cyclic",
+    "simulated": false
+   }
+  ],
+  "status": "OK",
+  "notes": [],
+  "seconds": 114
+ },
+ {
+  "group": "theory",
+  "question": "What is inside a black hole?",
+  "want_tier": [
+   "theory"
+  ],
+  "tier": "theory",
+  "title": "What is inside a black hole? A fall to the singularity",
+  "route": "write_model",
+  "engine": "scene",
+  "attempts": 1,
+  "checks_passed": 6,
+  "checks_total": 6,
+  "failed_checks": [],
+  "review": "pass",
+  "review_problems": [],
+  "answer": "Nobody knows for sure, but general relativity says that past the horizon there is no safe place: everything falls to a central singularity. For a 4.3 million solar mass hole, a ship starting at 20 r_s reaches the horizon after 5923 s and the singularity 28.7 s later, with a maximum possible time of 66.5 s. Tidal stretch across 2 m at the horizon is only 1.11e-03 m/s\u00b2 here but 2.06e+08 m/s\u00b2 for a 10 solar mass hole. Many physicists expect quantum gravity to replace the singularity with something else, such as a fuzzball, a bounce or a white hole, but none of these is confirmed.",
+  "assumptions": [
+   "Non-rotating (Schwarzschild) black hole of 4.3 million solar masses, like Sagittarius A*.",
+   "The ship and dust fall radially from rest at 20 Schwarzschild radii, using the exact geodesic.",
+   "Time shown is proper time on the falling ship, not a distant clock.",
+   "Dust grains each follow their own radial geodesic and are test particles, with no pressure or collisions.",
+   "The classical interior is what is drawn; quantum-gravity alternatives are described in captions, not simulated.",
+   "Hawking radiation, the accretion disk's own gravity and the ship's mass are ignored."
+  ],
+  "theories": [
+   {
+    "name": "Classical singularity (general relativity)",
+    "support": "consensus",
+    "card": "bh-interior-classical",
+    "simulated": true
+   },
+   {
+    "name": "Fuzzballs (string theory)",
+    "support": "minority",
+    "card": "bh-interior-fuzzball",
+    "simulated": false
+   },
+   {
+    "name": "Black hole to white hole (Planck stars)",
+    "support": "minority",
+    "card": "planck-star",
+    "simulated": false
+   },
+   {
+    "name": "Universe inside a black hole (torsion)",
+    "support": "minority",
+    "card": "poplawski-torsion",
+    "simulated": false
+   },
+   {
+    "name": "Firewall at the horizon",
+    "support": "minority",
+    "card": "bh-firewall",
+    "simulated": false
+   }
+  ],
+  "status": "OK",
+  "notes": [],
+  "seconds": 88
+ },
+ {
+  "group": "theory",
+  "question": "What if dark energy keeps getting stronger?",
+  "want_tier": [
+   "theory"
+  ],
+  "tier": "theory",
+  "title": "What if dark energy keeps getting stronger? The Big Rip",
+  "route": "write_model",
+  "engine": "scene",
+  "attempts": 3,
+  "checks_passed": 5,
+  "checks_total": 5,
+  "failed_checks": [],
+  "review": "pass",
+  "review_problems": [],
+  "answer": "If dark energy kept strengthening as phantom energy with w = -1.5, space would be torn apart in a Big Rip about 22.7 billion years from now. The Milky Way would go about 65 million years before the end and the Solar System about 3.4 months before. Earth would explode roughly 23.7 minutes before the end. Current data favour w near -1, and DESI hints that dark energy is weakening, so this is a minority possibility.",
+  "assumptions": [
+   "Strengthening dark energy is modelled as constant phantom w = -1.5 (Caldwell's example); data favour w near -1.",
+   "Flat universe with H0 = 67.4 km/s/Mpc, Omega_m = 0.315, Omega_r = 9e-5, Omega_DE = 0.685.",
+   "A bound system comes apart when the cosmic acceleration (a''/a) times its size exceeds its gravity per unit length, omega^2 = GM/R^3.",
+   "Near the rip a goes as (t_rip - t)^(-p) with p = 2/(3|1+w|), so a''/a = p(p+1)/Delta^2.",
+   "Earth is uniform density and held up by pressure until the cosmic term beats gravity, then it is treated as free dust (no shell crossing).",
+   "Milky Way uses the Sun's 230 Myr orbital period, the Solar System uses Earth's 1 yr orbit, the atom uses the Bohr orbit.",
+   "These simple thresholds give slightly different times from the published 60 Myr, 3 months, 30 min and 1e-19 s."
+  ],
+  "theories": [
+   {
+    "name": "Big Rip (phantom dark energy)",
+    "support": "minority",
+    "card": "big-rip",
+    "simulated": true
+   },
+   {
+    "name": "Evolving dark energy (DESI)",
+    "support": "significant-minority",
+    "card": "evolving-dark-energy",
+    "simulated": false
+   },
+   {
+    "name": "Far future: heat death",
+    "support": "mainstream-candidate",
+    "card": "far-future",
+    "simulated": false
+   }
+  ],
+  "status": "WARN",
+  "notes": [
+   "needed 3 attempts"
+  ],
+  "seconds": 362
+ },
+ {
+  "group": "theory",
+  "question": "What happens to information that falls into a black hole?",
+  "want_tier": [
+   "theory"
+  ],
+  "tier": "theory",
+  "title": "What happens to information that falls into a black hole?",
+  "route": "write_model",
+  "engine": "scene",
+  "attempts": 1,
+  "checks_passed": 8,
+  "checks_total": 8,
+  "failed_checks": [],
+  "review": "pass",
+  "review_problems": [],
+  "answer": "If quantum mechanics holds, the information is not destroyed. It stays encoded in the Hawking radiation that leaks out as the black hole slowly evaporates. For a 10 solar mass hole that takes about 2.10e+70 years. Hawking's original thermal calculation would have the radiation entropy rise to 1.32 S0, more than the hole's initial entropy of 1.05e+79 k_B, so the information would be lost. Island calculations give a Page curve that turns over at 1.19e+70 years, which is the best current evidence that it comes out. This is still a theory, and firewalls, fuzzballs and white hole bounces are rival pictures.",
+  "assumptions": [
+   "A non-rotating, uncharged 10 solar mass black hole in empty space, with no new matter falling in.",
+   "Hawking radiation is treated as a 3D photon gas, so the entropy it carries is 4/3 of its energy over temperature.",
+   "The Page curve is the minimum of the radiation entropy and the black hole entropy, as in Page's 1993 argument.",
+   "Time is shown as a fraction of the evaporation lifetime, about 1e70 years, so the infall is compressed into the first frames.",
+   "Radiation particle motion is schematic: the outward speed is a display speed, not to scale with the lifetime.",
+   "The information-paradox card (islands and the Page curve) is the simulated picture; the others are described in captions."
+  ],
+  "theories": [
+   {
+    "name": "Information escapes: Page curve and islands",
+    "support": "mainstream-candidate",
+    "card": "information-paradox",
+    "simulated": true
+   },
+   {
+    "name": "Hawking evaporation with thermal radiation",
+    "support": "consensus",
+    "card": "hawking-evaporation",
+    "simulated": false
+   },
+   {
+    "name": "Firewalls",
+    "support": "minority",
+    "card": "bh-firewall",
+    "simulated": false
+   },
+   {
+    "name": "Fuzzballs",
+    "support": "minority",
+    "card": "bh-interior-fuzzball",
+    "simulated": false
+   },
+   {
+    "name": "Black hole to white hole (Planck stars)",
+    "support": "minority",
+    "card": "planck-star",
+    "simulated": false
+   }
+  ],
+  "status": "OK",
+  "notes": [],
+  "seconds": 71
+ },
+ {
+  "group": "theory",
+  "question": "Could a warp drive let us travel faster than light?",
+  "want_tier": [
+   "theory"
+  ],
+  "tier": "theory",
+  "title": "Could a warp drive beat light to Proxima Centauri?",
+  "route": "write_model",
+  "engine": "scene",
+  "attempts": 1,
+  "checks_passed": 7,
+  "checks_total": 7,
+  "failed_checks": [],
+  "review": "pass",
+  "review_problems": [],
+  "answer": "In general relativity, an Alcubierre warp bubble could carry a ship to Proxima Centauri in 0.42 yr at 10 c, while light needs 4.25 yr. The ship never outruns light locally, because space itself is stretched behind and squeezed ahead of it. But even a tiny 50 m bubble needs about 14.1 solar masses of negative energy, and no known matter provides that, so this stays a mathematical possibility, not an engineering plan.",
+  "assumptions": [
+   "Target is Proxima Centauri at 4.2465 ly and the bubble speed is 10 c.",
+   "Energy uses the Pfenning-Ford thin wall estimate for a 50 m bubble with a 1 m wall.",
+   "Drawn bubble radius, wall sharpness and star sizes are exaggerated so they are visible.",
+   "The ship sits at the bubble centre, where it feels no acceleration.",
+   "The bubble is assumed to exist already; how to create, steer or stop it is not modelled."
+  ],
+  "theories": [
+   {
+    "name": "Alcubierre warp drive",
+    "support": "fringe",
+    "card": "alcubierre-warp",
+    "simulated": true
+   },
+   {
+    "name": "Traversable wormholes",
+    "support": "minority",
+    "card": "traversable-wormhole",
+    "simulated": false
+   },
+   {
+    "name": "Tachyons",
+    "support": "fringe",
+    "card": "tachyons-ftl",
+    "simulated": false
+   },
+   {
+    "name": "Closed timelike curves and chronology protection",
+    "support": "fringe",
+    "card": "time-travel-ctc",
+    "simulated": false
+   }
+  ],
+  "status": "OK",
+  "notes": [],
+  "seconds": 69
+ },
+ {
+  "group": "theory",
+  "question": "Is our universe inside a black hole?",
+  "want_tier": [
+   "theory"
+  ],
+  "tier": "theory",
+  "title": "Is our universe the inside of a black hole?",
+  "route": "write_model",
+  "engine": "scene",
+  "attempts": 1,
+  "checks_passed": 7,
+  "checks_total": 7,
+  "failed_checks": [],
+  "review": "pass",
+  "review_problems": [],
+  "answer": "Maybe, but nobody can show it. Our Hubble sphere has a radius of 14.5 Gly and holds about 9.24e+52 kg, and that mass has a Schwarzschild radius of 14.5 Gly, the same size, so the universe's density matches a black hole of its own size. That is a real coincidence, but our universe is expanding while matter inside a black hole is crushed, so the idea needs a bounce: in Einstein-Cartan torsion theory (Poplawski, a minority view) collapse reverses and a new expanding universe appears, and in the toy model here this happens 11.7 Gyr after the horizon forms. No observation currently tests this.",
+  "assumptions": [
+   "Toy model: a uniform dust ball (Oppenheimer-Snyder) with the mass of the Hubble sphere, starting at rest at twice its Schwarzschild radius.",
+   "Torsion is modelled by a phenomenological (1 - rho/rho_max) factor in the Friedmann equation.",
+   "The bounce density is illustrative: 125000 times critical density, far below a realistic value, so the bounce is visible.",
+   "Hubble radius uses H0 = 67.4 km/s/Mpc and a flat universe at critical density.",
+   "Pressure, dark energy, radiation and the exterior geometry after the bounce are ignored.",
+   "The real universe is expanding from a hot Big Bang, so this is a test of the idea, not evidence for it."
+  ],
+  "theories": [
+   {
+    "name": "Universe inside a black hole (torsion bounce)",
+    "support": "minority",
+    "card": "poplawski-torsion",
+    "simulated": true
+   },
+   {
+    "name": "Classical singularity",
+    "support": "consensus",
+    "card": "bh-interior-classical",
+    "simulated": false
+   },
+   {
+    "name": "Black hole to white hole (Planck stars)",
+    "support": "minority",
+    "card": "planck-star",
+    "simulated": false
+   },
+   {
+    "name": "Cosmological natural selection",
+    "support": "minority",
+    "card": "cosmological-natural-selection",
+    "simulated": false
+   }
+  ],
+  "status": "OK",
+  "notes": [],
+  "seconds": 113
+ },
+ {
+  "group": "theory",
+  "question": "What if the vacuum of space decayed?",
+  "want_tier": [
+   "theory"
+  ],
+  "tier": "theory",
+  "title": "A bubble of true vacuum sweeps across Earth",
+  "route": "write_model",
+  "engine": "scene",
+  "attempts": 2,
+  "checks_passed": 5,
+  "checks_total": 5,
+  "failed_checks": [],
+  "review": "pass",
+  "review_problems": [],
+  "answer": "If the vacuum decayed, a bubble of true vacuum would grow at essentially the speed of light, so it would reach Earth with no warning and sweep across the whole planet in about 42.5 ms. It would cross Neptune's orbit radius in 4.2 hours. Inside the bubble the particles' masses would change, so atoms and chemistry as we know them could not survive. The Standard Model estimate for our vacuum's lifetime is about 1e+139 years, roughly 7.2e+128 times the current age of the universe, and new physics might make it stable.",
+  "assumptions": [
+   "Our vacuum is metastable and a true-vacuum bubble nucleates 1 light-second from Earth.",
+   "The wall follows the Coleman-De Luccia hyperbola R = sqrt(R0^2 + (c t)^2) with a nominal tiny R0 of 1 m.",
+   "Only the wall geometry is computed; what the new vacuum does to matter is not simulated.",
+   "Earth is shown as 3000 points in a uniform ball; hot points are those already inside the bubble.",
+   "The wall is drawn as a 5 Earth-radius wide patch of the full sphere.",
+   "Earth's own motion and rotation are negligible during 450 ms.",
+   "Lifetime figures come from the Standard Model estimate and assume no new physics."
+  ],
+  "theories": [
+   {
+    "name": "Vacuum decay (Coleman-De Luccia bubble)",
+    "support": "mainstream-candidate",
+    "card": "vacuum-decay",
+    "simulated": true
+   },
+   {
+    "name": "Big Rip (phantom dark energy)",
+    "support": "minority",
+    "card": "big-rip",
+    "simulated": false
+   },
+   {
+    "name": "New physics stabilises the vacuum",
+    "support": "significant-minority",
+    "card": null,
+    "simulated": false
+   }
+  ],
+  "status": "OK",
+  "notes": [],
+  "seconds": 163
+ },
+ {
+  "group": "theory",
+  "question": "Could a wormhole connect two distant places?",
+  "want_tier": [
+   "theory"
+  ],
+  "tier": "theory",
+  "title": "Could a wormhole connect two distant places?",
+  "route": "write_model",
+  "engine": "scene",
+  "attempts": 2,
+  "checks_passed": 8,
+  "checks_total": 8,
+  "failed_checks": [],
+  "review": "pass",
+  "review_problems": [],
+  "answer": "On paper, yes: general relativity allows a tunnel joining two distant places, and a 1 km throat could be crossed by a ship at 0.8c in about 83 \u00b5s. But keeping it open needs exotic negative energy, about 1.06 solar masses of it for this small throat, with a density of 4.8e+36 J/m\u00b3. Nothing known supplies that, so wormholes remain a mathematical possibility, not a travel option. Only about 0.25% of the lamp's light would even find the entrance.",
+  "assumptions": [
+   "Static, spherically symmetric Ellis-Bronstein wormhole with zero mass at infinity.",
+   "Throat radius is a chosen 1 km; larger throats need proportionally more exotic mass.",
+   "Surface is the equatorial embedding diagram; the full space is three-dimensional.",
+   "Ship and lamp are test objects that do not disturb the geometry.",
+   "Light follows exact null geodesics; the ship moves at constant 0.8c in proper distance.",
+   "Stability and how to build the wormhole are not modelled."
+  ],
+  "theories": [
+   {
+    "name": "Traversable wormholes (Morris-Thorne)",
+    "support": "minority",
+    "card": "traversable-wormhole",
+    "simulated": true
+   },
+   {
+    "name": "ER = EPR",
+    "support": "significant-minority",
+    "card": "er-epr",
+    "simulated": false
+   },
+   {
+    "name": "Time travel: closed timelike curves",
+    "support": "fringe",
+    "card": "time-travel-ctc",
+    "simulated": false
+   }
+  ],
+  "status": "OK",
+  "notes": [],
+  "seconds": 138
+ },
+ {
+  "group": "theory",
+  "question": "What if dark matter does not exist?",
+  "want_tier": [
+   "theory"
+  ],
+  "tier": "theory",
+  "title": "A galaxy without dark matter: Newton versus MOND",
+  "route": "write_model",
+  "engine": "scene",
+  "attempts": 1,
+  "checks_passed": 7,
+  "checks_total": 7,
+  "failed_checks": [],
+  "review": "pass",
+  "review_problems": [],
+  "answer": "If dark matter does not exist, something else must explain why galaxies spin so fast. With visible matter and ordinary gravity, a star at 30 kpc would move at only 100 km/s, but observations show nearly flat speeds. The best known alternative, MOND, strengthens gravity below 1.2e-10 m/s\u00b2 and gives 197 km/s at 30 kpc, but it is a minority view because it struggles with galaxy clusters and the cosmic microwave background.",
+  "assumptions": [
+   "Visible mass is 7e10 solar masses in an exponential disk with scale length 3 kpc.",
+   "Enclosed mass is treated spherically, which is only approximate for a disk.",
+   "MOND uses the simple interpolating function and a0 = 1.2e-10 m/s\u00b2.",
+   "Stars are on circular orbits in a fixed, non-evolving potential.",
+   "Cluster and CMB evidence, where MOND struggles, is not simulated."
+  ],
+  "theories": [
+   {
+    "name": "Dark matter exists (Lambda-CDM)",
+    "support": "consensus",
+    "card": null,
+    "simulated": false
+   },
+   {
+    "name": "MOND (modified gravity instead of dark matter)",
+    "support": "minority",
+    "card": "mond",
+    "simulated": true
+   },
+   {
+    "name": "Emergent gravity",
+    "support": "minority",
+    "card": null,
+    "simulated": false
+   }
+  ],
+  "status": "OK",
+  "notes": [],
+  "seconds": 65
+ },
+ {
+  "group": "theory",
+  "question": "Will the universe expand forever or collapse again?",
+  "want_tier": [
+   "theory"
+  ],
+  "tier": "theory",
+  "title": "Will the universe expand forever or collapse again?",
+  "route": "write_model",
+  "engine": "scene",
+  "attempts": 2,
+  "checks_passed": 7,
+  "checks_total": 7,
+  "failed_checks": [],
+  "review": "pass",
+  "review_problems": [],
+  "answer": "With today's measured numbers, the universe will keep expanding forever: dark energy is speeding the expansion up, and at 100 Gyr after the Big Bang (today is 13.8 Gyr) space is 146.1 times today's size. The expansion rate then levels off at 55.8 km/s/Mpc. A collapse would need far more matter: a closed universe with three times the critical density and no dark energy would crunch at 48.3 Gyr, but the real universe is not like that. The caveat is that this assumes dark energy stays constant, which new surveys are still testing.",
+  "assumptions": [
+   "Homogeneous, isotropic Friedmann universe with Planck 2018 parameters.",
+   "Dark energy is a cosmological constant in the main run.",
+   "The collapsing case is a hypothetical closed matter-only universe with Omega_m = 3.",
+   "Display size uses the cube root of the scale factor so both universes fit on screen.",
+   "Galaxy positions are comoving and only illustrate the scale factor."
+  ],
+  "theories": [
+   {
+    "name": "Far future: heat death",
+    "support": "mainstream-candidate",
+    "card": "far-future",
+    "simulated": true
+   },
+   {
+    "name": "Evolving dark energy",
+    "support": "significant-minority",
+    "card": null,
+    "simulated": false
+   },
+   {
+    "name": "Vacuum decay",
+    "support": "mainstream-candidate",
+    "card": "vacuum-decay",
+    "simulated": false
+   },
+   {
+    "name": "Ekpyrotic cyclic universe",
+    "support": "significant-minority",
+    "card": "ekpyrotic-cyclic",
+    "simulated": false
+   },
+   {
+    "name": "Conformal cyclic cosmology",
+    "support": "minority",
+    "card": "conformal-cyclic-cosmology",
+    "simulated": false
+   }
+  ],
+  "status": "OK",
+  "notes": [],
+  "seconds": 87
+ },
+ {
+  "group": "niche",
+  "question": "What if the star Gliese 710 passed through the Oort cloud?",
+  "want_tier": [
+   "exact"
+  ],
+  "tier": "exact",
+  "title": "Gliese 710 plunges through the Oort cloud",
+  "route": "simulate_orbits",
+  "engine": "gravity",
+  "attempts": 1,
+  "checks_passed": 1,
+  "checks_total": 1,
+  "failed_checks": [],
+  "review": "pass",
+  "review_problems": [],
+  "answer": "",
+  "assumptions": [
+   "Gliese 710 has about 0.6 solar masses and moves at 14 km/s (2.95 AU/yr) relative to the Sun.",
+   "Closest approach is set to about 10,700 AU (0.052 pc), in line with Gaia-based estimates of roughly 1.3 million years from now.",
+   "The star starts 100,000 AU away on a straight path; the 70,000 year window covers the approach and flyby only.",
+   "The Oort cloud is represented by 24 massless comets on circular orbits at 10,000 to 50,000 AU, in many directions.",
+   "Planets are left out because the flyby is too distant to change their orbits noticeably.",
+   "The real Oort cloud holds trillions of comets, and the real orbits are mostly eccentric, so this shows the pattern of disturbance and not a count of comets sent inward.",
+   "The Galactic tide and other passing stars are ignored."
+  ],
+  "theories": [],
+  "status": "OK",
+  "notes": [],
+  "seconds": 40
+ },
+ {
+  "group": "niche",
+  "question": "What if a primordial black hole the mass of an asteroid passed through Earth?",
+  "want_tier": [
+   "exact"
+  ],
+  "tier": "exact",
+  "title": "An asteroid-mass black hole punches straight through Earth",
+  "route": "write_model",
+  "engine": "scene",
+  "attempts": 3,
+  "checks_passed": 6,
+  "checks_total": 7,
+  "failed_checks": [
+   "Earth and Primordial black hole are drawn overlapping in 19% of frames. Use true radii or a smaller scale so separate bodies look separate; if they collide, end one body (NaN) at impact"
+  ],
+  "review": null,
+  "review_problems": [],
+  "answer": "A 1.0e+20 kg black hole is only 149 nm wide, so it slips through Earth in 376 s at 32.0 km/s. Its gravity and drag vaporise a very thin channel, dumping about 4.7e+23 J along the way, and it barely slows down. Earth as a whole is nudged by only 0.03 m/s, and the hole's Hawking temperature of 1227 K is negligible.",
+  "assumptions": [
+   "Black hole mass 1e20 kg (about a 50 km wide asteroid), speed at infinity 30 km/s, entering 0.3 Earth radii off centre.",
+   "Earth is treated as uniform density (5514 kg/m^3) with the BH adding its own mass to the pull.",
+   "Drag uses the ideal-fluid Bondi-Hoyle dynamical friction formula, an order-of-magnitude estimate for solid rock.",
+   "The two bodies are integrated as a two-body problem in relative coordinates; Earth recoil follows from momentum conservation.",
+   "Earth's spin, the Sun and the Moon are ignored during the 30 minute encounter.",
+   "The black hole is drawn about 1e12 times too large so it can be seen; the glowing tunnel width is also exaggerated.",
+   "Hawking radiation is included only as a headline number, since it is negligible here."
+  ],
+  "theories": [],
+  "status": "FAIL",
+  "notes": [],
+  "seconds": 398
+ },
+ {
+  "group": "niche",
+  "question": "What if Betelgeuse went supernova tonight?",
+  "want_tier": [
+   "exact"
+  ],
+  "tier": "exact",
+  "title": "Betelgeuse explodes: what reaches Earth, and when",
+  "route": "write_model",
+  "engine": "scene",
+  "attempts": 2,
+  "checks_passed": 5,
+  "checks_total": 5,
+  "failed_checks": [],
+  "review": "pass",
+  "review_problems": [],
+  "answer": "If Betelgeuse blew up tonight, the explosion actually happened about 548 years ago, because that is how long its signals need to reach us. First a flash of neutrinos would pass through Earth, about 24 hours before the light, and a detector such as Super-Kamiokande would record roughly 1e+07 events. Then a point of light of magnitude -10.2 would appear, about 9% of the full Moon's light, visible in daytime for about 100 days. At 548 ly we are far outside the roughly 26 ly danger zone, so Earth would be perfectly safe.",
+  "assumptions": [
+   "Distance 168.1 pc and radius 764 solar radii (Joyce et al. 2020).",
+   "Type II-P supernova: plateau luminosity 1e35 W for about 100 days, then a Co-56 tail.",
+   "Neutrino energy 3e46 J, mean 12 MeV, one sixth in electron antineutrinos, no oscillations.",
+   "Shock speed through the envelope taken as 6200 km/s, so breakout about a day after collapse.",
+   "Ejecta: 12 solar masses with 1e44 J kinetic energy, free expansion with no deceleration.",
+   "Nickel-56 mass 0.05 solar masses, gamma rays fully trapped in the tail.",
+   "Star and Earth sizes are enlarged in the scene so they are visible at light-year scale.",
+   "No interstellar dust extinction."
+  ],
+  "theories": [],
+  "status": "OK",
+  "notes": [],
+  "seconds": 190
+ },
+ {
+  "group": "niche",
+  "question": "What if Phobos crashed into Mars?",
+  "want_tier": [
+   "exact"
+  ],
+  "tier": "exact",
+  "title": "Phobos spirals down and hits Mars",
+  "route": "write_model",
+  "engine": "scene",
+  "attempts": 3,
+  "checks_passed": 3,
+  "checks_total": 6,
+  "failed_checks": [
+   "Impact speed near circular speed at the surface (3.555 km/s)",
+   "Impact energy equals 0.5 m v^2 for the circular-speed estimate",
+   "Angular momentum at impact near m sqrt(GM R)"
+  ],
+  "review": "fail",
+  "review_problems": [
+   "The infall trajectory is an arbitrary construction. Phobos is started at apoapsis 9376 km on an ellipse with a made-up periapsis of 1500 km. This amounts to deleting most of its orbital speed at once. Real Phobos would lose energy by slow tidal decay, spiralling inward on a nearly circular orbit. It would also probably be tidally disrupted near the Roche limit before reaching the surface. A quasi-circular decay reaches the surface at about sqrt(GM/R) \u2248 3.55 km/s, almost horizontally. The model gets 4.17 km/s, which is 17% high. The impact energy is 0.5 m v\u00b2, so it is about 38% high (9.3e22 J against about 6.7e22 J). The 1500 km periapsis is never stated as an assumption in the answer or the number notes. Fix: model the decay as a quasi-circular spiral, or state the periapsis assumption clearly and report a range of speeds and energies. Also say that Phobos would probably break up first.",
+   "The result '100 percent of ejecta fell back, too slow to escape' follows from the ejecta speed distribution the code imposes. Speeds are capped at 0.8 v_imp, which is about 3.3 km/s, below the 5.03 km/s escape speed. It is not a computed outcome, yet the answer presents it as a result. The 2170 km maximum height and the grazing-impact ejecta geometry (elevation 30\u201370\u00b0 on a near-horizontal impact) are also assumed. Fix: label these as assumed inputs, or compute ejecta speeds from a scaling law.",
+   "The angular-momentum bookkeeping (L_imp = m\u00b7ra\u00b7va) is tied to the arbitrary ellipse. A quasi-circular infall gives L \u2248 m\u00b7sqrt(GM\u00b7R) = 1.28e26 kg m\u00b2/s instead of 1.12e26. The day-length change would be about -0.055 s instead of -0.048 s, which is a smaller but real inconsistency."
+  ],
+  "answer": "If an intact Phobos spiralled down onto Mars, it would arrive almost horizontally at about 3.63 km/s and release roughly 1.68e+07 megatons of TNT, about 0.17 times the Chicxulub impact. Debris with assumed launch speeds would rise up to 2590 km, and Mars's day would change by at most -0.06 s. In reality Phobos would probably break up first, because it is inside the fluid Roche limit of 10586 km, and form a ring.",
+  "assumptions": [
+   "Phobos mass 1.0659e16 kg; Mars treated as a point mass with its real GM.",
+   "Phobos decays on a quasi-circular spiral, with a drag far stronger than real tidal decay so it fits on screen.",
+   "Phobos is assumed to stay intact; a weak rubble pile would probably break into a ring first.",
+   "Mars's atmosphere, oblateness and rotation are ignored during the fall.",
+   "Ejecta launch speeds (5 to 100 percent of impact speed), angles and directions are assumed inputs, not computed from a crater scaling law.",
+   "Ejecta fly ballistically in Mars's gravity; landed grains stay where they fall.",
+   "Phobos is drawn about 9 times too large so it can be seen.",
+   "Mars day change is an upper limit from angular momentum conservation."
+  ],
+  "theories": [],
+  "status": "FAIL",
+  "notes": [],
+  "seconds": 185
+ },
+ {
+  "group": "niche",
+  "question": "What if a gamma ray burst hit Earth from 6,000 light years away?",
+  "want_tier": [
+   "exact"
+  ],
+  "tier": "exact",
+  "title": "A gamma ray burst hits Earth from 6,000 light years",
+  "route": "write_model",
+  "engine": "scene",
+  "attempts": 2,
+  "checks_passed": 6,
+  "checks_total": 6,
+  "failed_checks": [],
+  "review": "pass",
+  "review_problems": [],
+  "answer": "A typical gamma ray burst (1e+45 J, 10 s) from 6,000 light years away arrives after 6000 years in flight with no warning. It delivers 25 kJ/m2, about 1.8 times the Sun's brightness for 10 s, and Earth absorbs 3.1e+18 J, which heats the high air by only 0.15 K. The real danger is chemical: the ionised air makes nitric oxide amounting to 7% of the ozone column, which would partly deplete the ozone layer and let more solar ultraviolet reach the surface. This model does not compute the ozone loss itself.",
+  "assumptions": [
+   "Typical long burst: isotropic-equivalent energy 1e45 J (1e52 erg), 10 s duration, flat light curve.",
+   "Earth lies inside the narrow jet, so the isotropic-equivalent fluence applies.",
+   "Gamma rays near 1 MeV are absorbed within about 16 g/cm2 of air, in the stratosphere.",
+   "Air needs 34 eV per ion pair and each pair makes about 1.25 nitric oxide molecules.",
+   "Ozone column taken as 300 Dobson units; ozone loss is not integrated, only the NO supply is compared.",
+   "Published studies find larger fluences (about 100 kJ/m2) give 30-40% ozone loss, so expect partial depletion here.",
+   "The drawn beam is 3 Earth radii wide; real jets are far wider, so the picture shows a thin slice.",
+   "Only the 10 s photon slab is drawn, not the 6000-year approach."
+  ],
+  "theories": [],
+  "status": "OK",
+  "notes": [],
+  "seconds": 138
+ },
+ {
+  "group": "absurd",
+  "question": "What if the Earth were shaped like a jalebi?",
+  "want_tier": [
+   "exact"
+  ],
+  "tier": "exact",
+  "title": "Earth reshaped into a jalebi: gravity and collapse",
+  "route": "write_model",
+  "engine": "scene",
+  "attempts": 3,
+  "checks_passed": 6,
+  "checks_total": 7,
+  "failed_checks": [
+   "Independent review failed: 'Strong-gravity surface pull (95th percentile)' is 4.048 m/s\u00b2 but an independent recompute gives 2.765 m/s\u00b2"
+  ],
+  "review": "fail",
+  "review_problems": [],
+  "answer": "A jalebi Earth with Earth's mass and density would be a spiral tube about 1196 km in radius and 2.8 Earth radii wide. Gravity on it would be odd: it pulls into the ground on only 94% of the surface, with typical pulls from -0.1 to 4.0 m/s\u00b2 instead of 9.8. It could not last: rock is far too weak to hold the shape, so it falls inward and is most compact after about 56 min, releasing roughly 17.7 MJ per kg compared with a sphere.",
+  "assumptions": [
+   "Same mass and mean density as today's Earth, shaped as a flat 4-turn Archimedean spiral tube.",
+   "The tube is sampled uniformly by arclength and cross-section; curvature weighting is neglected.",
+   "Collapse is a cold, pressureless self-gravity N-body of 450 equal-mass particles with softening of 0.08 Earth radii.",
+   "No rock strength, pressure, melting or rotation is modelled.",
+   "Energy release is a bookkeeping figure, not a predicted temperature.",
+   "Surface gravity uses 16384 sampled mass points with probes 5% of a tube radius outside the surface."
+  ],
+  "theories": [],
+  "status": "FAIL",
+  "notes": [],
+  "seconds": 357
+ },
+ {
+  "group": "absurd",
+  "question": "What if the Moon were made of cheese?",
+  "want_tier": [
+   "exact"
+  ],
+  "tier": "exact",
+  "title": "The Moon made of cheese: lighter, weaker tides, same orbit shape",
+  "route": "write_model",
+  "engine": "scene",
+  "attempts": 1,
+  "checks_passed": 7,
+  "checks_total": 7,
+  "failed_checks": [],
+  "review": "pass",
+  "review_problems": [],
+  "answer": "A cheese Moon of the same size would be much lighter, with 2.42 x 10^22 kg and a surface gravity of 0.53 m/s^2 instead of 1.62 m/s^2. Its orbit would hardly change, taking 27.40 days instead of 27.28, but ocean tides would shrink from 0.53 m to 0.18 m. The escape speed would be 1.36 km/s, and the Earth-Moon barycentre would sit 1549 km from Earth's centre.",
+  "assumptions": [
+   "Cheese density is taken as 1100 kg/m^3, uniform throughout.",
+   "Moon keeps today's radius and mean distance of 384,400 km.",
+   "Orbit is circular and two-body (Earth and Moon only, no Sun).",
+   "Tide is the equilibrium lunar tide on an ocean-covered Earth.",
+   "Picture is geocentric; both moons start at the same angle.",
+   "Cheese would dry out and outgas in sunlight; this is not modelled."
+  ],
+  "theories": [],
+  "status": "OK",
+  "notes": [],
+  "seconds": 58
+ },
+ {
+  "group": "absurd",
+  "question": "What if love had mass?",
+  "want_tier": [
+   "unknown"
+  ],
+  "tier": "unknown",
+  "title": "What if love had mass?",
+  "route": "simulate_orbits",
+  "engine": "none",
+  "attempts": 3,
+  "checks_passed": 0,
+  "checks_total": 0,
+  "failed_checks": [],
+  "review": null,
+  "review_problems": [],
+  "answer": "Love isn't a field or particle, so there's nothing to weigh, though it can feel heavy. Real fact: the Sun turns about 4 million tonnes of mass into light every second (E = mc\u00b2). Try asking: what if the Sun lost 1% of its mass?",
+  "assumptions": [],
+  "theories": [],
+  "status": "WARN",
+  "notes": [
+   "needed 3 attempts"
+  ],
+  "seconds": 8
+ },
+ {
+  "group": "absurd",
+  "question": "What if every person on Earth jumped at the same time?",
+  "want_tier": [
+   "exact"
+  ],
+  "tier": "exact",
+  "title": "Every human on Earth jumps at once",
+  "route": "write_model",
+  "engine": "scene",
+  "attempts": 1,
+  "checks_passed": 6,
+  "checks_total": 6,
+  "failed_checks": [],
+  "review": "pass",
+  "review_problems": [],
+  "answer": "Almost nothing happens. If all 8.0 billion people jumped 0.30 m at once, Earth would recoil by at most 24.9 fm, about 0.024 percent of the width of one atom, and that is the worst case with everyone pushing the same way. The jumpers spend about 0.35 kilotons of TNT of energy and hang in the air for 0.49 s. Earth is simply about 1.2e+13 times heavier than all of us put together.",
+  "assumptions": [
+   "8.0 billion people with an average mass of 62 kg.",
+   "Everyone jumps straight up 0.30 m.",
+   "Worst case: all the push is in one direction, whereas in reality it points outward all around the globe and mostly cancels.",
+   "Earth is treated as a rigid body and air resistance is ignored.",
+   "The crowd shown is a small sample of the people, drawn on a flat patch of ground."
+  ],
+  "theories": [],
+  "status": "OK",
+  "notes": [],
+  "seconds": 68
+ },
+ {
+  "group": "absurd",
+  "question": "What if time was purple?",
+  "want_tier": [
+   "unknown"
+  ],
+  "tier": "unknown",
+  "title": "What if time was purple?",
+  "route": "simulate_orbits",
+  "engine": "none",
+  "attempts": 2,
+  "checks_passed": 0,
+  "checks_total": 0,
+  "failed_checks": [],
+  "review": null,
+  "review_problems": [],
+  "answer": "Colour is how our eyes read light's wavelength, and time isn't light, so there's nothing to simulate. Fun fact: violet light at 400 nm wiggles about 7.5e14 times a second. Try asking: what if a clock ticked once per wave of violet light, and how would it run near a black hole?",
+  "assumptions": [],
+  "theories": [],
+  "status": "OK",
+  "notes": [],
+  "seconds": 7
+ }
+]
