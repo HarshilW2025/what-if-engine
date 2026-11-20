@@ -20,6 +20,7 @@ Check:
 3. The reality baseline check compares against a true measured value (not one derived from the model's own code).
 4. The qualitative behaviour (what moves where, what happens first) is what physics predicts.
 5. The answer text does not claim more than the model computed.
+6. What is drawn shows what the answer says happens: a star that swells into a red giant grows and reddens on screen, a body that is destroyed disappears, and light comes only from bodies that exist in the scene. A clear mismatch between the picture and the answer is a failure.
 
 Simplifications are fine when they are stated in the assumptions and do not change the conclusion. Fail only for errors that change a headline number by more than 5% or get the behaviour wrong. Do not fail for style.
 
@@ -151,6 +152,12 @@ def review(client, model: str, question: str, code: str, scene: dict) -> dict | 
             messages=[{"role": "user", "content": user}],
         )
         block = next((b for b in resp.content if getattr(b, "type", "") == "tool_use" and b.name == "review"), None)
+        if block is None:  # one nudge before giving up
+            said = "".join(getattr(b, "text", "") for b in resp.content).strip() or "(no text)"
+            resp = api_create(client, model=model, max_tokens=4000, system=system, tools=[REVIEW_TOOL], tool_choice={"type": "auto"},
+                              messages=[{"role": "user", "content": user}, {"role": "assistant", "content": said},
+                                        {"role": "user", "content": "Call the review tool now with your verdict."}])
+            block = next((b for b in resp.content if getattr(b, "type", "") == "tool_use" and b.name == "review"), None)
         if block is None:
             log.warning("reviewer did not call the tool")
             return None
@@ -241,6 +248,12 @@ def review_orbits(client, model: str, question: str, spec_input: dict, res: dict
             messages=[{"role": "user", "content": user}],
         )
         block = next((b for b in resp.content if getattr(b, "type", "") == "tool_use" and b.name == "review"), None)
+        if block is None:  # one nudge before giving up
+            said = "".join(getattr(b, "text", "") for b in resp.content).strip() or "(no text)"
+            resp = api_create(client, model=model, max_tokens=3000, system=ORBIT_SYSTEM, tools=[ORBIT_TOOL], tool_choice={"type": "auto"},
+                              messages=[{"role": "user", "content": user}, {"role": "assistant", "content": said},
+                                        {"role": "user", "content": "Call the review tool now with your verdict."}])
+            block = next((b for b in resp.content if getattr(b, "type", "") == "tool_use" and b.name == "review"), None)
         if block is None:
             log.warning("orbit reviewer did not call the tool")
             return None

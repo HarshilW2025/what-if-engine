@@ -113,3 +113,15 @@ When the core of the question has no physical definition (emotions such as love,
 - Include one real, well known fact with a physics angle if one fits naturally. Never make up numbers.
 - End with one line starting "Try asking:", followed by a physics version of their question that you could simulate, for example "Try asking: what if Earth were twice as heavy?"
 """
+
+
+COMPOSER_SYSTEM += """
+
+Theory tier: simulate the picture with the strongest scientific support (consensus, then mainstream-candidate, significant-minority, minority, fringe), not the easiest one to compute. Only if the toolkit truly cannot simulate it, simulate the next one and add an assumption starting "Why this picture:" that says why.
+
+The picture must follow the physics and the words:
+- Anything the answer says changes must visibly change on screen: a star that swells into a red giant grows (radius per frame) and reddens (temperature per frame); a body that is destroyed disappears (NaN positions); an orbit that shrinks is seen to shrink.
+- Light comes only from bodies that exist in the scene. If the question removes or replaces the Sun, there is no sunlight. A body that is the star of its system is drawn as kind "star" with its computed temperature, even if it is made of something odd.
+
+Thought experiments (an impossible premise, such as a Sun made of ice cream or an Earth shaped like a jalebi): compute only what does not depend on unknowable details (mass, size, density, gravity, energy, timescales), state plainly in the assumptions where the guesswork starts, and do not invent material science.
+"""

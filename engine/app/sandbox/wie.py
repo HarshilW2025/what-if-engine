@@ -42,7 +42,7 @@ T_cmb = 2.7255
 
 MAX_FRAMES = 400
 MAX_BODIES = 40
-MAX_CURVES = 24
+MAX_CURVES = 64
 MAX_CLOUDS = 8
 MAX_POINT_NUMBERS = 450_000
 KINDS = ("star", "planet", "earth", "moon", "rock", "blackhole", "ship", "particle", "light", "generic")
@@ -239,7 +239,7 @@ class Scene:
             raise ValueError(f"curves and clouds hold {total()} numbers, the limit is {MAX_POINT_NUMBERS}; use fewer frames")
         focus = self._camera["focus"]
         if focus is not None and focus not in [b["name"] for b in self._bodies]:
-            raise ValueError(f"camera focus {focus!r} is not a body name")
+            focus = None  # forgiving: an unknown focus falls back to the whole scene
 
         def body_out(b):
             out = {"name": b["name"], "kind": b["kind"], "color": b["color"], "spin": b["spin"], "disk": b["disk"], "positions": _q(b["positions"]), "radius": _q(b["radius"])}

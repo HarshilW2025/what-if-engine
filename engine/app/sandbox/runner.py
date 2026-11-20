@@ -225,7 +225,10 @@ def scene_checks(scene: dict) -> list[dict]:
     """Checks that the picture matches the physics, whatever the question. Only failures are returned; they trigger a repair.
     A bug in these checks must never break an answer, so any error here skips them."""
     try:
-        return _scene_checks(scene)
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            return _scene_checks(scene)
     except Exception:
         import logging
         logging.getLogger("scene_checks").exception("scene checks skipped")
@@ -262,6 +265,8 @@ def _scene_checks(scene: dict) -> list[dict]:
             same_size = abs(ri[k] - rj[k]) <= 0.01 * max(ri[k], rj[k], 1e-300)
             if bodies[i].get("kind") == bodies[j].get("kind") and same_size and d[k] < 0.1 * (ri[k] + rj[k]):
                 continue  # a comparison copy ("Earth if the Sun had stayed") starts on top of the original on purpose
+            if min(ri[k], rj[k]) < 0.05 * max(ri[k], rj[k]):
+                continue  # a much smaller body may sit inside or pass through a big one (a remnant, a probe, a tiny black hole)
             frac = float((both & (d < 0.9 * (ri[:n] + rj[:n]))).sum() / both.sum())
             if frac > 0.1:
                 out.append(_scene_fail(

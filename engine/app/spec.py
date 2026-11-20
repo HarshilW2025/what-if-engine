@@ -132,7 +132,7 @@ class QuantumParams(_Strict):
 # ---------- tier 3: no simulation ----------
 class NoSimParams(_Strict):
     engine: Literal["none"] = "none"
-    reason: str = Field(min_length=1, max_length=300)
+    reason: str = Field(min_length=1, max_length=700)
 
 
 EngineParams = Annotated[

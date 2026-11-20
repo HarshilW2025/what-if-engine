@@ -86,7 +86,7 @@ def _call(client: Anthropic, messages: list[dict]):
     try:
         return api_create(client, 
             model=MODEL,
-            max_tokens=16000,
+            max_tokens=32000,
             system=[{"type": "text", "text": COMPOSER_SYSTEM, "cache_control": {"type": "ephemeral"}}],
             tools=_tools(),
             tool_choice={"type": "auto"},
@@ -161,6 +161,16 @@ def ask(question: str, progress=None) -> dict:
                             "value": 0.0, "expected": 1.0, "rtol": 0.0, "atol": 0.0, "passed": False, "source": "baseline"}
                     scene["diagnostics"]["checks"].append(miss)
                     failed.append(miss)
+                if m.tier == "theory" and m.theories:
+                    rank = {"consensus": 4, "mainstream-candidate": 3, "significant-minority": 2, "minority": 1, "fringe": 0}
+                    sim = next((t for t in m.theories if t.simulated), None)
+                    best = max(rank.get(t.support, 0) for t in m.theories)
+                    explained = any(str(a).lower().startswith("why this picture:") for a in m.assumptions)
+                    if sim is not None and rank.get(sim.support, 0) < best and not explained:
+                        miss = {"name": f"Simulated '{sim.name}' ({sim.support}) instead of the best supported picture. Simulate the strongest supported theory, or add an assumption starting 'Why this picture:' saying why it cannot be simulated",
+                                "value": float(rank.get(sim.support, 0)), "expected": float(best), "rtol": 0.0, "atol": 0.0, "passed": False, "source": "theory"}
+                        scene["diagnostics"]["checks"].append(miss)
+                        failed.append(miss)
                 if not failed:
                     report("verify", "An independent reviewer is auditing the physics")
                     rev = review(client, MODEL, question, block.input.get("code", ""), scene)
@@ -196,6 +206,8 @@ def ask(question: str, progress=None) -> dict:
                 return {"spec": spec, "result": scene, "meta": meta}
         except ValidationError as e:
             problem = f"The tool input failed validation:\n{e}"
+            if resp.stop_reason == "max_tokens":
+                problem += "\nYour reply hit the length limit before it was complete. Write a shorter model (under about 200 lines) and keep assumptions and theory summaries brief."
         except EngineError as e:
             problem = f"The engine rejected the spec: {e}"
         except ModelError as e:
