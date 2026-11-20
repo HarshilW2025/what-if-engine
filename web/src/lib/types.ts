@@ -42,6 +42,8 @@ export interface GravityDiagnostics {
   truncated: boolean;
   frames: number;
   wall_time_s: number;
+  checks?: SceneCheck[];
+  grounding?: { numbers: number; ungrounded: number[] };
 }
 
 export interface MergeEvent {
@@ -59,6 +61,8 @@ export interface GravityResult {
   positions: (Vec3 | null)[][];
   events: MergeEvent[];
   diagnostics: GravityDiagnostics;
+  answer?: string;
+  numbers?: { name: string; value: number; unit: string; note: string }[];
 }
 
 export interface NoSimResult {
