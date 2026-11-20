@@ -97,7 +97,7 @@ def _call(client: Anthropic, messages: list[dict]):
         raise ComposeError(f"The AI service failed: {getattr(e, 'message', e)}") from e
 
 
-def ask(question: str, progress=None) -> dict:
+def ask(question: str, progress=None, hint: dict | None = None) -> dict:
     """question -> Claude picks a tool -> validate -> run -> self checks. Up to two repair rounds.
     progress(stage, detail) is called at each real step (kept in meta.pipeline for debugging)."""
     report = progress or (lambda stage, detail: None)
@@ -109,8 +109,15 @@ def ask(question: str, progress=None) -> dict:
     content = f"Question: {question}"
     if found:
         content += "\n\n" + CARDS_NOTE + "\n" + "\n".join(f'<card id="{c.id}">{json.dumps(c.for_prompt())}</card>' for c in found)
+    if hint and hint.get("kind") == "thought":
+        content += "\n\nTriage: this is a thought experiment (an impossible premise). Follow the thought experiment rules."
+    from app.ai import bank as _bank
+    worked = _bank.examples_for(question)
+    if worked:
+        content += "\n\n" + worked
     messages: list[dict] = [{"role": "user", "content": content}]
     meta = {"model": MODEL, "attempts": 0, "input_tokens": 0, "output_tokens": 0, "route": None, "cards_retrieved": list(by_id)}
+    meta["triage"] = (hint or {}).get("kind")
 
     for attempt in range(1, MAX_ATTEMPTS + 1):
         meta["attempts"] = attempt

@@ -26,6 +26,7 @@ export default function AnswerPanel({ resp }: { resp: SimResponse }) {
   const { spec, result } = resp;
   if (result.engine === "none") return null;
   const theory = spec.tier === "theory";
+  const thought = !theory && resp.meta?.triage === "thought";
   const numbers = result.numbers ?? [];
   const checks = result.diagnostics.checks ?? [];
   const review = checks.find((c) => c.name.startsWith("Independent review"));
@@ -36,8 +37,8 @@ export default function AnswerPanel({ resp }: { resp: SimResponse }) {
     <div className="space-y-6 text-sm">
       <div>
         <div className="mb-2 flex flex-wrap items-center gap-2">
-          <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider ${theory ? "bg-amber-400/15 text-amber-300" : "bg-emerald-400/15 text-emerald-300"}`}>
-            {theory ? "Theory" : "Exact physics"}
+          <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider ${theory ? "bg-amber-400/15 text-amber-300" : thought ? "bg-violet-400/15 text-violet-300" : "bg-emerald-400/15 text-emerald-300"}`}>
+            {theory ? "Theory" : thought ? "Thought experiment" : "Exact physics"}
           </span>
           {review && (
             <span className={`rounded-full px-2.5 py-0.5 text-[11px] ${review.passed ? "bg-sky-400/10 text-sky-300" : "bg-rose-400/10 text-rose-300"}`} title={review.name}>
@@ -47,6 +48,12 @@ export default function AnswerPanel({ resp }: { resp: SimResponse }) {
         </div>
         <h2 className="font-display text-xl font-semibold leading-snug">{spec.title}</h2>
         <p className="mt-1 text-zinc-400">{spec.question}</p>
+        {resp.meta?.bank && (
+          <p className="mt-1 text-[11px] text-sky-300">
+            ⚡ Verified answer from the bank
+            {resp.meta.asked && resp.meta.asked.trim().toLowerCase() !== spec.question.trim().toLowerCase() ? `, matched to your question "${resp.meta.asked}"` : ""}
+          </p>
+        )}
       </div>
 
       <Section title="Answer">

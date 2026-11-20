@@ -134,6 +134,9 @@ export interface AskMeta {
   input_tokens: number;
   output_tokens: number;
   route?: string | null;
+  triage?: string | null;
+  bank?: boolean;
+  asked?: string;
 }
 
 export interface SimResponse {

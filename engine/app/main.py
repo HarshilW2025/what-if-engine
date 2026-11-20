@@ -117,7 +117,10 @@ def ask_start(body: AskRequest, request: Request, fresh: bool = False):
 
     def work() -> None:
         try:
-            out = ask(q, progress)
+            from app.ai import bank
+            out, tri = bank.answer_from_bank(q, progress)  # a verified banked answer if one matches, in seconds
+            if out is None:
+                out = ask(q, progress, hint=tri)
             out.setdefault("meta", {})["pipeline"] = job["steps"]
             cache.put(q, out)
             job["result"] = out

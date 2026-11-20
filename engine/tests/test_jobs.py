@@ -6,12 +6,14 @@ import app.main as main
 
 
 def test_job_records_pipeline_and_returns_result(monkeypatch):
-    def fake_ask(q, progress=None):
+    def fake_ask(q, progress=None, hint=None):
         progress("compose", "Claude is writing the physics model")
         progress("run", "Running the model in the sandbox")
         return {"spec": {"question": q}, "result": {"engine": "none", "reason": "test"}, "meta": {}}
 
     monkeypatch.setattr(main, "ask", fake_ask)
+    from app.ai import bank
+    monkeypatch.setattr(bank, "answer_from_bank", lambda q, progress=None: (None, {"kind": None, "match": 0}))
     monkeypatch.setattr(main.cache, "get", lambda q: None)
     monkeypatch.setattr(main.cache, "put", lambda q, d: None)
     client = TestClient(main.app)
