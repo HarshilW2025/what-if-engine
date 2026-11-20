@@ -7,7 +7,7 @@ export const FOUR_SUNS: ScenarioSpec = {
   params: {
     engine: "gravity",
     duration_yr: 30,
-    frames: 900,
+    frames: 1500,
     bodies: [
       { name: "Sun A", mass_msun: 1, pos_au: [1, 0, 0], vel_au_yr: [0, 3.2, 0] },
       { name: "Sun B", mass_msun: 1, pos_au: [0, 1, 0], vel_au_yr: [-3.2, 0, 0] },
