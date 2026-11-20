@@ -131,6 +131,100 @@ function Sky() {
   return null;
 }
 
+// ---------- relativistic aberration: the sky as seen from a ship moving near light speed ----------
+const LEN_M: Record<string, number> = {
+  m: 1, meter: 1, metre: 1, km: 1e3, au: 1.495978707e11, ly: 9.4607e15, "light year": 9.4607e15, "light-year": 9.4607e15,
+  pc: 3.0857e16, parsec: 3.0857e16, "earth radius": 6.371e6, "earth radii": 6.371e6, "solar radius": 6.957e8, "solar radii": 6.957e8,
+  "light second": 299792458, "light-second": 299792458, ls: 299792458,
+};
+const TIME_S: Record<string, number> = {
+  s: 1, sec: 1, second: 1, ms: 1e-3, min: 60, minute: 60, h: 3600, hr: 3600, hour: 3600, d: 86400, day: 86400, yr: 3.15576e7, y: 3.15576e7, year: 3.15576e7,
+};
+function unitScale(u: string, table: Record<string, number>): number | null {
+  const k = u.trim().toLowerCase();
+  if (k in table) return table[k];
+  if (k.endsWith("s") && k.slice(0, -1) in table) return table[k.slice(0, -1)];
+  return null;
+}
+const ABER_VERT = `varying vec3 vDir; void main() { vDir = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
+const ABER_FRAG = `
+uniform samplerCube uEnv;
+uniform vec3 uBeta; // ship velocity / c, world space
+varying vec3 vDir;
+void main() {
+  vec3 d = normalize(vDir);            // direction a star is SEEN in, from the ship
+  float b = length(uBeta);
+  vec3 n = uBeta / b;
+  float cp = clamp(dot(d, n), -1.0, 1.0);
+  float c0 = (cp - b) / (1.0 - b * cp); // where that star really is (aberration undone)
+  vec3 perp = d - n * cp;
+  float pl = length(perp);
+  vec3 src = pl > 1e-5 ? n * c0 + perp / pl * sqrt(max(0.0, 1.0 - c0 * c0)) : n * sign(cp);
+  float g = 1.0 / sqrt(1.0 - b * b);
+  float D = 1.0 / (g * (1.0 - b * cp)); // Doppler factor: blue ahead, red behind
+  vec3 col = textureCube(uEnv, src).rgb;
+  vec3 tint = D >= 1.0 ? mix(vec3(1.0), vec3(0.55, 0.75, 1.5), clamp(log2(D) / 3.0, 0.0, 1.0))
+                       : mix(vec3(1.0), vec3(1.5, 0.45, 0.2), clamp(-log2(D) / 3.0, 0.0, 1.0));
+  gl_FragColor = vec4(col * tint * clamp(pow(D, 3.0), 0.0, 30.0), 1.0); // brightness ~ D^3 (relativistic beaming)
+}
+`;
+
+/** Only active when the camera follows a ship or particle moving faster than 5% of light speed. */
+function AberrationSky({ res }: { res: SceneResult }) {
+  const scene = useThree((s) => s.scene);
+  const camera = useThree((s) => s.camera);
+  const mesh = useRef<THREE.Mesh>(null);
+  const a = useMemo(() => new THREE.Vector3(), []);
+  const v = useMemo(() => new THREE.Vector3(), []);
+  const autoFocus = res.camera.focus ? res.bodies.findIndex((b) => b.name === res.camera.focus) : -1;
+  const cScene = useMemo(() => {
+    const L = unitScale(res.length_unit, LEN_M);
+    const T = unitScale(res.time_unit, TIME_S);
+    return L && T ? (299792458 * T) / L : null;
+  }, [res.length_unit, res.time_unit]);
+  const mat = useMemo(
+    () => new THREE.ShaderMaterial({ uniforms: { uEnv: { value: null }, uBeta: { value: new THREE.Vector3() } }, vertexShader: ABER_VERT, fragmentShader: ABER_FRAG, side: THREE.BackSide, depthWrite: false, depthTest: false }),
+    [],
+  );
+  useEffect(() => () => mat.dispose(), [mat]);
+
+  useFrame(() => {
+    const m = mesh.current;
+    if (!m) return;
+    const s = usePlayer.getState();
+    const fi = s.focus ?? autoFocus;
+    const body = fi >= 0 ? res.bodies[fi] : undefined;
+    const bg = scene.background as THREE.Texture | null;
+    let on = false;
+    if (cScene && bg && s.follow && body && (body.kind === "ship" || body.kind === "particle")) {
+      const F = res.times.length;
+      const i0 = Math.max(0, Math.min(cursor(F, s.playhead).i, F - 2));
+      const dt = res.times[i0 + 1] - res.times[i0];
+      if (dt > 0 && sampleVec(body.positions, i0, i0, 0, a) && sampleVec(body.positions, i0 + 1, i0 + 1, 0, v)) {
+        v.sub(a).divideScalar(dt * cScene);
+        const beta = v.length();
+        if (beta > 0.05 && beta < 1) {
+          if (beta > 0.99995) v.multiplyScalar(0.99995 / beta);
+          mat.uniforms.uBeta.value.copy(v);
+          mat.uniforms.uEnv.value = bg;
+          on = true;
+        }
+      }
+    }
+    m.visible = on;
+    if (on) {
+      m.position.copy(camera.position);
+      m.scale.setScalar((camera as THREE.PerspectiveCamera).far * 0.4);
+    }
+  });
+
+  return (
+    <mesh ref={mesh} material={mat} renderOrder={-2} frustumCulled={false} visible={false}>
+      <sphereGeometry args={[1, 64, 32]} />
+    </mesh>
+  );
+}
+
 // ---------- bodies ----------
 type PlanetProps = { res: SceneResult; index: number; slots: Slots<THREE.Group>; starIdx: number[]; meshRef: RefObject<THREE.Mesh | null> };
 
@@ -508,6 +602,7 @@ function CurveView({ res, curve }: { res: SceneResult; curve: SceneCurve }) {
 }
 
 // ---------- camera: frames the focus body (or everything) and the debris around it ----------
+const SAMPLE_N = 1500; // particles sampled per frame to frame the debris; plenty, and cheap
 function SceneCamera({ res, slots, geoms }: { res: SceneResult; slots: Slots<THREE.Group>; geoms: Slots<THREE.BufferGeometry> }) {
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera;
   const controls = useThree((s) => s.controls) as unknown as Controls | null;
@@ -518,6 +613,7 @@ function SceneCamera({ res, slots, geoms }: { res: SceneResult; slots: Slots<THR
   const target = useMemo(() => new THREE.Vector3(), []);
   const tmp = useMemo(() => new THREE.Vector3(), []);
   const before = useMemo(() => new THREE.Vector3(), []);
+  const dbuf = useMemo(() => new Float32Array(SAMPLE_N), []); // reused every frame: no allocation, no GC stutter
   const autoFocus = res.camera.focus ? res.bodies.findIndex((b) => b.name === res.camera.focus) : -1;
   const viewDir = useMemo(() => {
     const v = res.camera.view === "top" ? new THREE.Vector3(0.001, 1, 0.08) : res.camera.view === "side" ? new THREE.Vector3(0, 0.12, 1) : new THREE.Vector3(0.55, 0.45, 1);
@@ -575,15 +671,15 @@ function SceneCamera({ res, slots, geoms }: { res: SceneResult; slots: Slots<THR
         if (!geo) continue;
         const arr = geo.attributes.position.array as Float32Array;
         const n = arr.length / 3;
-        const d = new Float32Array(n);
+        const step = Math.max(1, Math.floor(n / SAMPLE_N));
         let m = 0;
-        for (let k = 0; k < n; k++) {
+        for (let k = 0; k < n && m < SAMPLE_N; k += step) {
           const x = arr[k * 3] - target.x, y = arr[k * 3 + 1] - target.y, z = arr[k * 3 + 2] - target.z;
           const dd = Math.sqrt(x * x + y * y + z * z);
-          if (Number.isFinite(dd)) d[m++] = dd;
+          if (Number.isFinite(dd)) dbuf[m++] = dd;
         }
         if (m) {
-          const sorted = d.subarray(0, m).sort();
+          const sorted = dbuf.subarray(0, m).sort();
           r = Math.max(r, sorted[Math.floor(m * 0.85)]);
         }
       }
@@ -754,6 +850,7 @@ export default function SceneView({ res }: { res: SceneResult }) {
     <div style={{ position: "absolute", inset: 0 }}>
       <Canvas camera={{ position: [0, 1, 3], fov: 50, near: 0.001, far: 1e6 }} dpr={[1, 1.5]} gl={{ antialias: false, powerPreference: "high-performance" }}>
         <Sky />
+        <AberrationSky res={res} />
         <Player F={res.times.length} />
         {res.bodies.map((b, k) => (
           <BodyView key={`${k}-${b.name}`} res={res} index={k} slots={groups} starIdx={starIdx} />

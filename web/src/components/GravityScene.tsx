@@ -537,7 +537,7 @@ function Body({ res, index, E0, slots, stars, temps }: { res: GravityResult; ind
     if (bhRef.current) bhRef.current.scale.setScalar(s / 2.598); // shadow drawn at the body's display size
     if (compact && sp) sp.rotation.y += delta * 3; // illustrative spin: real pulsars turn far too fast to show
     // a trail helps only when the motion is big next to the body; a wobble inside the body is noise
-    trail.visible = trailExtent > 3 * s;
+    trail.visible = trail.visible ? trailExtent > 2.5 * s : trailExtent > 3.5 * s; // hysteresis: no flicker while zooming
     if (starMat && sp) {
       starMat.uniforms.uTime.value = state.clock.elapsedTime;
       sp.rotation.y += delta * 0.05;
