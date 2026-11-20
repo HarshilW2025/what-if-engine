@@ -130,3 +130,8 @@ COMPOSER_SYSTEM += """
 
 Body names drive the visuals: name real bodies plainly (Sun, Moon, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune) so the viewer can show real NASA-based imagery. A body that is not the real thing gets a different name, for example "Cheese Moon", "Gold Earth" or "Second Moon", so it is never drawn with the real body's face.
 """
+
+COMPOSER_SYSTEM += """
+
+Compact stars: name them plainly ("Neutron star", "Pulsar", "Magnetar", "White dwarf") so the viewer draws them correctly, give pulsars their real spin rate (rad per time unit) in spin, and pass their surface temperature when you compute it.
+"""

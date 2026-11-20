@@ -10,6 +10,7 @@ import { frameDurations } from "@/lib/pacing";
 import { usePlayer } from "@/lib/store";
 import type { BodyInfo, GravityResult, MergeEvent, Vec3 } from "@/lib/types";
 import { BlackHoleVisual } from "./scene/blackHole";
+import { CompactStar, compactKind } from "./scene/compact";
 import { Ring, Safe, lookFor, type Look } from "./scene/looks";
 import { MAX_STARS, PLANET_FRAG, PLANET_VERT } from "./scene/planetShaders";
 import { SKY_FRAG, SKY_VERT, STAR_FRAG, STAR_VERT, TRAIL_FRAG, TRAIL_VERT } from "./scene/shaders";
@@ -30,7 +31,7 @@ type StarRef = { id: number; lum: number; color: THREE.Color };
 type Kind = 0 | 1 | 2 | 3; // 3 = real imagery
 
 const isBlackHole = (b: BodyInfo) => /black\s*hole/i.test(b.name);
-const isStar = (b: BodyInfo) => b.mass_msun >= 0.08 && !isBlackHole(b);
+const isStar = (b: BodyInfo) => b.mass_msun >= 0.08 && !isBlackHole(b) && !compactKind(b.name); // compact stars are dim in visible light
 /** main sequence mass to luminosity, solar units */
 const luminosity = (m: number) => (m >= 0.43 ? Math.pow(m, 3.5) : 0.23 * Math.pow(m, 2.3));
 const planetKind = (b: BodyInfo): Kind => (/earth/i.test(b.name) ? 0 : b.mass_msun < 10 * M_EARTH ? 1 : 2);
@@ -425,6 +426,7 @@ function Body({ res, index, E0, slots, stars, temps }: { res: GravityResult; ind
   const bh = isBlackHole(info);
   const bhRef = useRef<THREE.Group | null>(null);
   const look = star || bh ? null : lookFor(info.name);
+  const compact = bh ? null : compactKind(info.name);
   const kind = planetKind(info);
   const baseSize = baseSizeOf(info, E0);
   const minAngular = 0.012; // never smaller than this fraction of camera distance
@@ -533,6 +535,7 @@ function Body({ res, index, E0, slots, stars, temps }: { res: GravityResult; ind
     g.userData.size = s;
     if (sp) sp.scale.setScalar(s);
     if (bhRef.current) bhRef.current.scale.setScalar(s / 2.598); // shadow drawn at the body's display size
+    if (compact && sp) sp.rotation.y += delta * 3; // illustrative spin: real pulsars turn far too fast to show
     // a trail helps only when the motion is big next to the body; a wobble inside the body is noise
     trail.visible = trailExtent > 3 * s;
     if (starMat && sp) {
@@ -562,6 +565,8 @@ function Body({ res, index, E0, slots, stars, temps }: { res: GravityResult; ind
       >
         {bh ? (
           <BlackHoleVisual groupRef={bhRef} disk={false} />
+        ) : compact ? (
+          <CompactStar kind={compact} meshRef={sphere} />
         ) : starMat ? (
           <mesh ref={sphere} material={starMat}>
             <sphereGeometry args={[1, 64, 64]} />

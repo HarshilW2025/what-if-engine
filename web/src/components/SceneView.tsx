@@ -11,6 +11,7 @@ import { usePlayer } from "@/lib/store";
 import type { Num, SceneBody, SceneCloud, SceneCurve, SceneResult } from "@/lib/types";
 import { ZoomButtons, ZoomInput } from "./GravityScene";
 import { BlackHoleVisual } from "./scene/blackHole";
+import { CompactStar, compactKind } from "./scene/compact";
 import { Ring, Safe, lookFor, type Look } from "./scene/looks";
 import { MAX_STARS, PLANET_FRAG, PLANET_VERT } from "./scene/planetShaders";
 import { SKY_FRAG, SKY_VERT, STAR_FRAG, STAR_VERT } from "./scene/shaders";
@@ -249,6 +250,7 @@ function BodyView({ res, index, slots, starIdx }: { res: SceneResult; index: num
   const ahead = useMemo(() => new THREE.Vector3(), []);
   const minAngular = POINTLIKE.has(b.kind) || b.kind === "ship" ? 0.006 : 0.003;
   const look = useMemo(() => lookFor(b.name), [b.name]);
+  const compact = ["star", "generic", "particle", "planet", "rock"].includes(b.kind) ? compactKind(b.name) : null;
 
   const starColor = useMemo(() => {
     const T = b.temperature?.find((x) => x != null) ?? 5778;
@@ -259,13 +261,14 @@ function BodyView({ res, index, slots, starIdx }: { res: SceneResult; index: num
     [b.kind, starColor],
   );
   const haloMat = useMemo(() => {
+    if (compact) return null; // compact stars draw their own glow
     const base = { blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, toneMapped: false } as const;
     if (b.kind === "star") return new THREE.SpriteMaterial({ ...base, map: glowTexture(), color: starColor.clone().multiplyScalar(1.6) });
     if (b.kind === "light") return new THREE.SpriteMaterial({ ...base, map: glowTexture(), color: new THREE.Color(b.color ?? "#fff6d8").multiplyScalar(3) });
     if (b.kind === "particle") return new THREE.SpriteMaterial({ ...base, map: glowTexture(), color: new THREE.Color(b.color ?? KIND_COLOR.particle).multiplyScalar(2) });
     if (b.kind === "ship") return new THREE.SpriteMaterial({ ...base, map: glowTexture(), color: new THREE.Color(0.6, 1.2, 3) });
     return null;
-  }, [b.kind, b.color, starColor]);
+  }, [b.kind, b.color, starColor, compact]);
   const haloMul = b.kind === "star" ? 5 : b.kind === "blackhole" ? 3.2 : b.kind === "ship" ? 1.2 : 4;
 
   useEffect(
@@ -294,7 +297,8 @@ function BodyView({ res, index, slots, starIdx }: { res: SceneResult; index: num
     if (mesh.current) {
       mesh.current.scale.set(s * sx, s * sz, s * sy);
       const now = res.times[i] + (res.times[j] - res.times[i]) * t;
-      mesh.current.rotation.y = b.spin * now;
+      const spinsFast = (compact === "pulsar" || compact === "magnetar") && (b.spin === 0 || Math.abs(b.spin) * ((res.times[F - 1] - res.times[0]) / Math.max(1, F - 1)) > 0.6);
+      mesh.current.rotation.y = spinsFast ? state.clock.elapsedTime * 3 : b.spin * now; // too fast to show: illustrative rate
     }
     if (starMat) starMat.uniforms.uTime.value = state.clock.elapsedTime;
     if (halo.current) halo.current.scale.setScalar(s * haloMul);
@@ -316,11 +320,12 @@ function BodyView({ res, index, slots, starIdx }: { res: SceneResult; index: num
         usePlayer.getState().setFocus(index);
       }}
     >
-      {b.kind === "star" && starMat && (
+      {b.kind === "star" && starMat && !compact && (
         <mesh ref={mesh} material={starMat}>
           <sphereGeometry args={[1, 64, 64]} />
         </mesh>
       )}
+      {compact && <CompactStar kind={compact} meshRef={mesh} temperature={b.temperature?.find((x) => x != null) ?? undefined} />}
       {b.kind === "blackhole" && <BlackHoleVisual groupRef={bh} disk={!!b.disk} />}
       {b.kind === "ship" && (
         <mesh ref={mesh} rotation={[Math.PI / 2, 0, 0]}>
@@ -333,7 +338,7 @@ function BodyView({ res, index, slots, starIdx }: { res: SceneResult; index: num
           <EarthBody {...surfaceProps} />
         </Suspense>
       )}
-      {SURFACE_KINDS.has(b.kind) && b.kind !== "earth" &&
+      {SURFACE_KINDS.has(b.kind) && b.kind !== "earth" && !compact &&
         (look ? (
           <Safe fallback={<PlanetBody {...surfaceProps} textures={null} />}>
             <Suspense fallback={<PlanetBody {...surfaceProps} textures={null} />}>
@@ -729,7 +734,7 @@ export default function SceneView({ res }: { res: SceneResult }) {
   const groups = useRef<(THREE.Group | null)[]>([]);
   const geoms = useRef<(THREE.BufferGeometry | null)[]>([]);
   const tags = useRef<(HTMLSpanElement | null)[]>([]);
-  const starIdx = useMemo(() => res.bodies.map((b, k) => (b.kind === "star" ? k : -1)).filter((k) => k >= 0), [res]);
+  const starIdx = useMemo(() => res.bodies.map((b, k) => (b.kind === "star" && !compactKind(b.name) ? k : -1)).filter((k) => k >= 0), [res]);
   const labelled = res.bodies.map((b, k) => ({ b, k })).filter(({ b }) => !POINTLIKE.has(b.kind)).slice(0, MAX_LABELS);
 
   useEffect(() => {
