@@ -11,6 +11,7 @@ from fastapi import FastAPI, HTTPException, Request  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from pydantic import BaseModel, Field  # noqa: E402
 
+from app.ai import cache  # noqa: E402
 from app.ai.composer import ComposeError, ask  # noqa: E402
 from app.engines import run_spec  # noqa: E402
 from app.engines.errors import EngineError  # noqa: E402
@@ -48,6 +49,11 @@ def health():
     return {"ok": True}
 
 
+@app.get("/version")
+def version():
+    return {"cache_version": cache.version()}
+
+
 @app.post("/simulate")
 def simulate(spec: ScenarioSpec):
     try:
@@ -57,11 +63,19 @@ def simulate(spec: ScenarioSpec):
 
 
 @app.post("/ask")
-def ask_endpoint(body: AskRequest, request: Request):
+def ask_endpoint(body: AskRequest, request: Request, fresh: bool = False):
+    q = body.question.strip()
+    if not fresh:
+        hit = cache.get(q)
+        if hit:
+            hit.setdefault("meta", {})["cached"] = True
+            return hit
     ip = request.headers.get("x-forwarded-for", "").split(",")[0].strip() or (request.client.host if request.client else "?")
     if not _allow(ip):
         raise HTTPException(status_code=429, detail="Too many questions this hour. Try again a bit later.")
     try:
-        return ask(body.question.strip())
+        out = ask(q)
     except ComposeError as e:
         raise HTTPException(status_code=422, detail=str(e))
+    cache.put(q, out)
+    return out

@@ -12,6 +12,7 @@ class Theory(BaseModel):
     support: Support
     summary: str = Field(min_length=1, max_length=500)
     simulated: bool = False
+    card: str | None = Field(default=None, max_length=60)
 
 
 class ModelSpec(BaseModel):

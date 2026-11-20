@@ -1,0 +1,44 @@
+{
+  "id": "tachyons-ftl",
+  "title": "Tachyons and faster than light",
+  "status": "theory",
+  "support": "fringe",
+  "concepts": [
+    "faster than light",
+    "tachyon",
+    "causality",
+    "time travel",
+    "relativity"
+  ],
+  "example_questions": [
+    "What if something moved faster than light?",
+    "Could we send a message back in time?"
+  ],
+  "summary": "Relativity does not forbid particles that always travel faster than light (tachyons), but they would have imaginary mass, speed up as they lose energy, and could be used to send signals into the past, creating paradoxes. No tachyon has ever been observed. In modern field theory, a tachyonic field signals an instability rather than faster than light particles.",
+  "proponents": [
+    "Gerald Feinberg"
+  ],
+  "support_note": "No experimental evidence; treated as hypothetical.",
+  "what_happens": [
+    "A tachyon always moves faster than light",
+    "Some observers see it arrive before it was sent",
+    "Two tachyon signals could form a loop into the past"
+  ],
+  "key_numbers": [],
+  "objections": [
+    "Causality paradoxes",
+    "No observations"
+  ],
+  "competes_with": [
+    "alcubierre-warp",
+    "time-travel-ctc"
+  ],
+  "sources": [
+    {
+      "title": "Possibility of faster-than-light particles",
+      "authors": "G. Feinberg",
+      "year": 1967,
+      "url": "https://doi.org/10.1103/PhysRev.159.1089"
+    }
+  ]
+}

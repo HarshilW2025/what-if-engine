@@ -1,0 +1,58 @@
+{
+  "id": "time-travel-ctc",
+  "title": "Time travel: closed timelike curves",
+  "status": "theory",
+  "support": "fringe",
+  "concepts": [
+    "time travel",
+    "closed timelike curve",
+    "wormhole",
+    "causality",
+    "chronology protection"
+  ],
+  "example_questions": [
+    "What if we could travel back in time?",
+    "Could a wormhole be a time machine?"
+  ],
+  "summary": "Some solutions of general relativity contain closed timelike curves, paths through spacetime that return to their own past, such as Godel's rotating universe or a wormhole whose mouths age differently. Hawking's chronology protection conjecture proposes that quantum effects always prevent such time machines from forming.",
+  "proponents": [
+    "Kurt Godel",
+    "Kip Thorne",
+    "Stephen Hawking"
+  ],
+  "support_note": "Allowed mathematically; most physicists expect nature to forbid them.",
+  "what_happens": [
+    "One wormhole mouth is moved at high speed so it ages less",
+    "The mouths become offset in time",
+    "Quantum fluctuations may build up and destroy the wormhole before a loop forms"
+  ],
+  "key_numbers": [],
+  "objections": [
+    "Causality paradoxes",
+    "Chronology protection"
+  ],
+  "competes_with": [
+    "traversable-wormhole",
+    "tachyons-ftl"
+  ],
+  "sources": [
+    {
+      "title": "An example of a new type of cosmological solutions of Einstein's field equations of gravitation",
+      "authors": "K. Godel",
+      "year": 1949,
+      "url": "https://doi.org/10.1103/RevModPhys.21.447"
+    },
+    {
+      "title": "Wormholes, time machines, and the weak energy condition",
+      "authors": "M. S. Morris, K. S. Thorne, U. Yurtsever",
+      "year": 1988,
+      "url": "https://doi.org/10.1103/PhysRevLett.61.1446"
+    },
+    {
+      "title": "Chronology protection conjecture",
+      "authors": "S. W. Hawking",
+      "year": 1992,
+      "url": "https://doi.org/10.1103/PhysRevD.46.603"
+    }
+  ]
+}

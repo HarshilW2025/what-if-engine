@@ -309,12 +309,26 @@ function BodyView({ res, index, slots, starIdx }: { res: SceneResult; index: num
 }
 
 // ---------- clouds and curves ----------
+const LUT_N = 96;
+const T_LO = 500;
+const T_HI = 40000;
+let LUT: THREE.Color[] | null = null;
+/** blackbody colour plus glow strength for a temperature, from a small lookup table */
+function tempColor(T: number, out: THREE.Color) {
+  if (!LUT) LUT = Array.from({ length: LUT_N }, (_, k) => kelvinToColor(Math.max(1000, T_LO * Math.pow(T_HI / T_LO, k / (LUT_N - 1)))).clone());
+  const x = Math.log(Math.min(T_HI, Math.max(T_LO, T)) / T_LO) / Math.log(T_HI / T_LO);
+  const glow = T > 800 ? 1 + Math.min(3, (T - 800) / 1200) : 0.5;
+  return out.copy(LUT[Math.round(x * (LUT_N - 1))]).multiplyScalar(glow);
+}
+
 function CloudView({ res, cloud, slot, geoms }: { res: SceneResult; cloud: SceneCloud; slot: number; geoms: Slots<THREE.BufferGeometry> }) {
   const F = res.times.length;
   const N = cloud.points[0]?.length ?? 0;
+  const each = !!cloud.temperature_each;
   const { points, geo, mat } = useMemo(() => {
     const geo = new THREE.BufferGeometry();
     geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(N * 3), 3));
+    if (each) geo.setAttribute("color", new THREE.BufferAttribute(new Float32Array(N * 3), 3));
     const mat = new THREE.PointsMaterial({
       map: glowTexture(),
       transparent: true,
@@ -322,12 +336,13 @@ function CloudView({ res, cloud, slot, geoms }: { res: SceneResult; cloud: Scene
       blending: THREE.AdditiveBlending,
       toneMapped: false,
       sizeAttenuation: true,
-      color: new THREE.Color(cloud.color ?? "#ffb070"),
+      vertexColors: each,
+      color: each ? new THREE.Color(1, 1, 1) : new THREE.Color(cloud.color ?? "#ffb070"),
     });
     const points = new THREE.Points(geo, mat);
     points.frustumCulled = false;
     return { points, geo, mat };
-  }, [N, cloud.color]);
+  }, [N, cloud.color, each]);
   useEffect(() => {
     geoms.current[slot] = geo;
     return () => {
@@ -337,6 +352,7 @@ function CloudView({ res, cloud, slot, geoms }: { res: SceneResult; cloud: Scene
     };
   }, [geo, mat, geoms, slot]);
   const base = useMemo(() => new THREE.Color(cloud.color ?? "#ffb070"), [cloud.color]);
+  const col = useMemo(() => new THREE.Color(), []);
 
   useFrame((state) => {
     const { i, j, t } = cursor(F, usePlayer.getState().playhead);
@@ -363,11 +379,26 @@ function CloudView({ res, cloud, slot, geoms }: { res: SceneResult; cloud: Scene
       arr[k * 3 + 2] = -y;
     }
     geo.attributes.position.needsUpdate = true;
-    const T = sampleNum(cloud.temperature, i, j, t, NaN);
-    if (Number.isFinite(T)) {
-      const glow = T > 800 ? 1 + Math.min(3, (T - 800) / 1200) : 0.7;
-      mat.color.copy(kelvinToColor(Math.max(1000, T))).multiplyScalar(glow);
-    } else mat.color.copy(base);
+
+    if (each && cloud.temperature_each) {
+      const carr = geo.attributes.color.array as Float32Array;
+      const TA = cloud.temperature_each[i];
+      const TB = cloud.temperature_each[j];
+      for (let k = 0; k < N; k++) {
+        const ta = TA?.[k];
+        const tb = TB?.[k];
+        const T = ta == null ? 300 : tb == null ? ta : ta + (tb - ta) * t;
+        tempColor(T, col);
+        carr[k * 3] = col.r;
+        carr[k * 3 + 1] = col.g;
+        carr[k * 3 + 2] = col.b;
+      }
+      geo.attributes.color.needsUpdate = true;
+    } else {
+      const T = sampleNum(cloud.temperature, i, j, t, NaN);
+      if (Number.isFinite(T)) tempColor(T, mat.color);
+      else mat.color.copy(base);
+    }
     const controls = state.controls as unknown as Controls | null;
     const d = controls ? state.camera.position.distanceTo(controls.target) : state.camera.position.length();
     mat.size = cloud.size * d * 0.012;

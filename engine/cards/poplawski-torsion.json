@@ -1,0 +1,45 @@
+{
+  "id": "poplawski-torsion",
+  "title": "Universe inside a black hole (torsion)",
+  "status": "theory",
+  "support": "minority",
+  "concepts": [
+    "black hole",
+    "big bang",
+    "bounce",
+    "torsion",
+    "einstein cartan",
+    "baby universe"
+  ],
+  "example_questions": [
+    "What if our universe is inside a black hole?",
+    "What happens to matter inside a black hole?"
+  ],
+  "summary": "In Einstein-Cartan gravity, spacetime torsion created by the spin of matter becomes repulsive at extreme densities. Matter falling into a black hole would bounce instead of forming a singularity, creating a new expanding universe on the other side. Our own Big Bang could have been such a bounce inside a black hole in a parent universe.",
+  "proponents": [
+    "Nikodem Poplawski"
+  ],
+  "support_note": "Pursued by a small number of researchers; not tested observationally.",
+  "what_happens": [
+    "Matter collapses inside a black hole",
+    "Torsion halts the collapse and causes a bounce",
+    "A new universe expands on the far side of the horizon"
+  ],
+  "key_numbers": [],
+  "objections": [
+    "Einstein-Cartan effects are negligible except at extreme density, so hard to test"
+  ],
+  "competes_with": [
+    "cosmological-natural-selection",
+    "planck-star",
+    "no-boundary"
+  ],
+  "sources": [
+    {
+      "title": "Cosmology with torsion: An alternative to cosmic inflation",
+      "authors": "N. J. Poplawski",
+      "year": 2010,
+      "url": "https://arxiv.org/abs/1007.0587"
+    }
+  ]
+}

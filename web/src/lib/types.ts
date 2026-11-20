@@ -8,6 +8,7 @@ export interface Theory {
   support: "consensus" | "mainstream-candidate" | "significant-minority" | "minority" | "fringe";
   summary: string;
   simulated: boolean;
+  card?: string | null;
 }
 
 export interface ScenarioSpec {
@@ -18,6 +19,7 @@ export interface ScenarioSpec {
   cards?: string[];
   assumptions?: string[];
   theories?: Theory[];
+  card_refs?: { id: string; title: string; sources: { title: string; authors: string; year: number | null; url: string }[] }[];
 }
 
 export interface BodyInfo {
@@ -91,6 +93,7 @@ export interface SceneCloud {
   size: number;
   points: Num[][][];
   temperature?: Num[];
+  temperature_each?: Num[][];
 }
 
 export interface SceneCheck {

@@ -1,0 +1,52 @@
+{
+  "id": "traversable-wormhole",
+  "title": "Traversable wormholes",
+  "status": "theory",
+  "support": "minority",
+  "concepts": [
+    "wormhole",
+    "shortcut",
+    "exotic matter",
+    "faster than light",
+    "travel"
+  ],
+  "example_questions": [
+    "What if we went through a wormhole?",
+    "Could a wormhole connect two stars?"
+  ],
+  "summary": "General relativity allows wormholes, tunnels joining distant regions of space. Keeping one open long enough to travel through requires exotic matter that violates the null energy condition. Quantum effects can provide this in special theoretical setups (Gao, Jafferis and Wall), but those wormholes are no faster than going the long way round.",
+  "proponents": [
+    "Michael Morris",
+    "Kip Thorne"
+  ],
+  "support_note": "Mathematically allowed; no known way to build a macroscopic traversable wormhole.",
+  "what_happens": [
+    "Two mouths connect through a short throat",
+    "Exotic matter holds the throat open",
+    "Light passing near a mouth is strongly lensed"
+  ],
+  "key_numbers": [],
+  "objections": [
+    "Needs exotic matter in large amounts",
+    "Could be turned into a time machine"
+  ],
+  "competes_with": [
+    "alcubierre-warp",
+    "er-epr",
+    "time-travel-ctc"
+  ],
+  "sources": [
+    {
+      "title": "Wormholes in spacetime and their use for interstellar travel",
+      "authors": "M. S. Morris, K. S. Thorne",
+      "year": 1988,
+      "url": "https://doi.org/10.1119/1.15620"
+    },
+    {
+      "title": "Traversable wormholes via a double trace deformation",
+      "authors": "P. Gao, D. L. Jafferis, A. C. Wall",
+      "year": 2017,
+      "url": "https://arxiv.org/abs/1608.05687"
+    }
+  ]
+}

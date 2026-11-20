@@ -1,0 +1,46 @@
+{
+  "id": "no-boundary",
+  "title": "No-boundary proposal (before the Big Bang)",
+  "status": "theory",
+  "support": "significant-minority",
+  "concepts": [
+    "big bang",
+    "before the big bang",
+    "quantum cosmology",
+    "imaginary time",
+    "origin of the universe"
+  ],
+  "example_questions": [
+    "What happened before the Big Bang?",
+    "Did time have a beginning?"
+  ],
+  "summary": "Hartle and Hawking proposed that near the Big Bang, time behaves like a direction of space, so the universe has no initial edge, like the South Pole has nothing south of it. Asking what came before the Big Bang would then be meaningless.",
+  "proponents": [
+    "James Hartle",
+    "Stephen Hawking"
+  ],
+  "support_note": "Influential but debated; its mathematical definition remains contested.",
+  "what_happens": [
+    "Shrinking back toward the start, time becomes space-like",
+    "The geometry closes off smoothly like a rounded cap",
+    "There is no moment before the beginning"
+  ],
+  "key_numbers": [],
+  "objections": [
+    "Recent analyses question whether the proposal gives a well behaved universe"
+  ],
+  "competes_with": [
+    "ekpyrotic-cyclic",
+    "eternal-inflation",
+    "conformal-cyclic-cosmology",
+    "poplawski-torsion"
+  ],
+  "sources": [
+    {
+      "title": "Wave function of the Universe",
+      "authors": "J. B. Hartle, S. W. Hawking",
+      "year": 1983,
+      "url": "https://doi.org/10.1103/PhysRevD.28.2960"
+    }
+  ]
+}

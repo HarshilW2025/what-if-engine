@@ -162,7 +162,8 @@ class Scene:
         return self
 
     def cloud(self, name, points, color=None, size=1.0, temperature=None):
-        """Many particles (debris, gas, photons): (F,N,3). temperature in K () or (F,)."""
+        """Many particles (debris, gas, photons): (F,N,3). temperature in K: () or (F,) for the whole cloud,
+        (N,) or (F,N) for each particle."""
         if len(self._clouds) >= MAX_CLOUDS:
             raise ValueError(f"at most {MAX_CLOUDS} clouds")
         a = np.asarray(points, dtype=float)
@@ -170,7 +171,14 @@ class Scene:
             raise ValueError(f"cloud {name}: expected ({self.F},N,3) with no infinity, got {a.shape}")
         c_ = {"name": str(name)[:40], "color": _color(color), "size": float(size), "points": a}
         if temperature is not None:
-            c_["temperature"] = self._frames(temperature, f"cloud {name} temperature", ())
+            T = np.asarray(temperature, dtype=float)
+            N = a.shape[1]
+            if T.shape in ((), (self.F,)):
+                c_["temperature"] = self._frames(T, f"cloud {name} temperature", ())
+            elif T.shape in ((N,), (self.F, N)):
+                c_["temperature_each"] = self._frames(T, f"cloud {name} temperature", (N,))
+            else:
+                raise ValueError(f"cloud {name} temperature: expected (), ({self.F},), ({N},) or ({self.F},{N}), got {T.shape}")
         self._clouds.append(c_)
         return self
 
@@ -209,9 +217,21 @@ class Scene:
     def to_dict(self):
         if not (self._bodies or self._curves or self._clouds):
             raise ValueError("the scene is empty: add at least one body, curve or cloud")
-        n = sum(c_["points"].size for c_ in self._curves) + sum(c_["points"].size for c_ in self._clouds)
-        if n > MAX_POINT_NUMBERS:
-            raise ValueError(f"curves and clouds hold {n} numbers, the limit is {MAX_POINT_NUMBERS}; use fewer points or frames")
+        def total():
+            return sum(c_["points"].size for c_ in self._curves) + sum(c_["points"].size + c_.get("temperature_each", np.empty(0)).size for c_ in self._clouds)
+
+        thinned = 1
+        if total() > MAX_POINT_NUMBERS:  # keep every k-th particle and curve point rather than fail
+            thinned = int(math.ceil(total() / MAX_POINT_NUMBERS))
+            for c_ in self._clouds:
+                c_["points"] = c_["points"][:, ::thinned]
+                if "temperature_each" in c_:
+                    c_["temperature_each"] = c_["temperature_each"][:, ::thinned]
+            for c_ in self._curves:
+                if c_["points"].shape[-2] // thinned >= 2:
+                    c_["points"] = c_["points"][..., ::thinned, :]
+        if total() > MAX_POINT_NUMBERS:
+            raise ValueError(f"curves and clouds hold {total()} numbers, the limit is {MAX_POINT_NUMBERS}; use fewer frames")
         focus = self._camera["focus"]
         if focus is not None and focus not in [b["name"] for b in self._bodies]:
             raise ValueError(f"camera focus {focus!r} is not a body name")
@@ -230,7 +250,8 @@ class Scene:
             "times": _q(self.t),
             "bodies": [body_out(b) for b in self._bodies],
             "curves": [{k: (_q(v) if k == "points" else v) for k, v in c_.items()} for c_ in self._curves],
-            "clouds": [{k: (_q(v) if k in ("points", "temperature") else v) for k, v in c_.items()} for c_ in self._clouds],
+            "clouds": [{k: (_q(v) if k in ("points", "temperature", "temperature_each") else v) for k, v in c_.items()} for c_ in self._clouds],
+            "thinned": thinned,
             "captions": sorted(self._captions, key=lambda x: x["t"]),
             "series": [{**s, "values": _q(s["values"])} for s in self._series],
             "numbers": self._numbers,

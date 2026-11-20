@@ -1,0 +1,54 @@
+{
+  "id": "planck-star",
+  "title": "Black hole to white hole (Planck stars)",
+  "status": "theory",
+  "support": "minority",
+  "concepts": [
+    "black hole",
+    "white hole",
+    "loop quantum gravity",
+    "bounce",
+    "singularity"
+  ],
+  "example_questions": [
+    "What if a black hole turned into a white hole?",
+    "What is at the centre of a black hole?"
+  ],
+  "summary": "In loop quantum gravity inspired models, collapsing matter never reaches a singularity. Quantum pressure at Planck density makes it bounce. Inside, the bounce is quick, but extreme time dilation means outsiders see the black hole for a very long time before it turns into a white hole and releases what fell in.",
+  "proponents": [
+    "Carlo Rovelli",
+    "Francesca Vidotto",
+    "Hal Haggard"
+  ],
+  "support_note": "A serious proposal within loop quantum gravity; no observational evidence yet.",
+  "what_happens": [
+    "Matter collapses to Planck density instead of a singularity",
+    "It bounces",
+    "Seen from outside, the black hole lasts a very long time",
+    "It ends as a white hole that releases its contents"
+  ],
+  "key_numbers": [],
+  "objections": [
+    "White holes may be unstable",
+    "Depends on loop quantum gravity, which is unconfirmed"
+  ],
+  "competes_with": [
+    "bh-interior-classical",
+    "bh-interior-fuzzball",
+    "hawking-evaporation"
+  ],
+  "sources": [
+    {
+      "title": "Planck stars",
+      "authors": "C. Rovelli, F. Vidotto",
+      "year": 2014,
+      "url": "https://arxiv.org/abs/1401.6562"
+    },
+    {
+      "title": "Black hole fireworks: quantum gravity effects outside the horizon spark black to white hole tunneling",
+      "authors": "H. M. Haggard, C. Rovelli",
+      "year": 2015,
+      "url": "https://arxiv.org/abs/1407.0989"
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "id": "vacuum-decay",
+  "title": "Vacuum decay",
+  "status": "theory",
+  "support": "mainstream-candidate",
+  "concepts": [
+    "false vacuum",
+    "higgs field",
+    "end of the universe",
+    "bubble",
+    "metastable"
+  ],
+  "example_questions": [
+    "What if the vacuum decayed?",
+    "Could the universe end suddenly?"
+  ],
+  "summary": "Measured Higgs boson and top quark masses suggest our vacuum may be metastable: not the lowest energy state. A bubble of true vacuum could form by quantum tunnelling and expand at nearly light speed, destroying everything it reaches. Calculations within the Standard Model put the expected lifetime vastly beyond the current age of the universe.",
+  "proponents": [
+    "Sidney Coleman",
+    "Frank De Luccia"
+  ],
+  "support_note": "A standard calculation if no new physics changes the Higgs potential.",
+  "what_happens": [
+    "A tiny bubble of true vacuum nucleates",
+    "Its wall accelerates to nearly light speed",
+    "Inside, physics and chemistry change, so matter as we know it cannot exist",
+    "No warning arrives before the wall itself"
+  ],
+  "key_numbers": [
+    {
+      "name": "Estimated lifetime of our vacuum",
+      "value": "about 1e139",
+      "units": "years",
+      "source": "Andreassen, Frost and Schwartz 2018"
+    },
+    {
+      "name": "Lower bound at 95% confidence",
+      "value": "1e58",
+      "units": "years",
+      "source": "Andreassen, Frost and Schwartz 2018"
+    }
+  ],
+  "objections": [
+    "New physics beyond the Standard Model could stabilise the vacuum"
+  ],
+  "competes_with": [
+    "big-rip",
+    "far-future"
+  ],
+  "sources": [
+    {
+      "title": "Gravitational effects on and of vacuum decay",
+      "authors": "S. Coleman, F. De Luccia",
+      "year": 1980,
+      "url": "https://doi.org/10.1103/PhysRevD.21.3305"
+    },
+    {
+      "title": "Scale invariant instantons and the complete lifetime of the Standard Model",
+      "authors": "A. Andreassen, W. Frost, M. D. Schwartz",
+      "year": 2018,
+      "url": "https://arxiv.org/abs/1707.08124"
+    }
+  ]
+}

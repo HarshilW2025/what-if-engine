@@ -1,0 +1,47 @@
+{
+  "id": "bh-firewall",
+  "title": "Black hole firewalls",
+  "status": "contested",
+  "support": "minority",
+  "concepts": [
+    "black hole",
+    "event horizon",
+    "firewall",
+    "information paradox",
+    "entanglement"
+  ],
+  "example_questions": [
+    "What if you fell into an old black hole?",
+    "Is there a wall of fire at the event horizon?"
+  ],
+  "summary": "AMPS argued that unitarity, effective field theory and a smooth horizon cannot all hold for an old black hole. One resolution is a firewall: high energy quanta at the horizon that burn up anything falling in, instead of the smooth crossing GR predicts.",
+  "proponents": [
+    "Ahmed Almheiri",
+    "Donald Marolf",
+    "Joseph Polchinski",
+    "James Sully"
+  ],
+  "support_note": "Prompted major research; many physicists now favour resolutions without firewalls.",
+  "what_happens": [
+    "An old black hole (past its Page time) is approached",
+    "At the horizon the infaller meets intense radiation instead of empty space"
+  ],
+  "key_numbers": [],
+  "objections": [
+    "Violates the equivalence principle at the horizon",
+    "Islands and ER = EPR offer alternatives"
+  ],
+  "competes_with": [
+    "bh-interior-classical",
+    "bh-interior-fuzzball",
+    "information-paradox"
+  ],
+  "sources": [
+    {
+      "title": "Black holes: complementarity or firewalls?",
+      "authors": "A. Almheiri, D. Marolf, J. Polchinski, J. Sully",
+      "year": 2013,
+      "url": "https://arxiv.org/abs/1207.3123"
+    }
+  ]
+}

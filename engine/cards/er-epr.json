@@ -1,0 +1,43 @@
+{
+  "id": "er-epr",
+  "title": "ER = EPR",
+  "status": "theory",
+  "support": "significant-minority",
+  "concepts": [
+    "entanglement",
+    "wormhole",
+    "black hole",
+    "quantum gravity",
+    "einstein rosen bridge"
+  ],
+  "example_questions": [
+    "Are entangled particles connected by wormholes?",
+    "What if two black holes were entangled?"
+  ],
+  "summary": "The conjecture that quantum entanglement and Einstein-Rosen bridges (non-traversable wormholes) are two descriptions of the same thing. Two maximally entangled black holes would be joined by a wormhole, which cannot be used to send signals faster than light.",
+  "proponents": [
+    "Juan Maldacena",
+    "Leonard Susskind"
+  ],
+  "support_note": "Influential in quantum gravity research; still a conjecture.",
+  "what_happens": [
+    "Two black holes are created entangled",
+    "Their interiors are connected by a bridge",
+    "Nothing can cross from one mouth to the other"
+  ],
+  "key_numbers": [],
+  "objections": [
+    "Unclear how it applies to ordinary entangled particles"
+  ],
+  "competes_with": [
+    "traversable-wormhole"
+  ],
+  "sources": [
+    {
+      "title": "Cool horizons for entangled black holes",
+      "authors": "J. Maldacena, L. Susskind",
+      "year": 2013,
+      "url": "https://arxiv.org/abs/1306.0533"
+    }
+  ]
+}

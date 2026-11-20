@@ -1,0 +1,66 @@
+{
+  "id": "information-paradox",
+  "title": "Black hole information paradox: Page curve and islands",
+  "status": "theory",
+  "support": "mainstream-candidate",
+  "concepts": [
+    "black hole",
+    "information paradox",
+    "hawking radiation",
+    "entanglement",
+    "page curve"
+  ],
+  "example_questions": [
+    "What happens to information in a black hole?",
+    "What if a black hole evaporated completely?"
+  ],
+  "summary": "If Hawking radiation is exactly thermal, information about what fell in seems lost, contradicting quantum mechanics. Page showed that if information is preserved, the radiation's entanglement must rise and then fall (the Page curve). Since 2019, island calculations in semiclassical gravity reproduce the Page curve, suggesting information does come out.",
+  "proponents": [
+    "Don Page",
+    "Geoff Penington",
+    "Ahmed Almheiri",
+    "Netta Engelhardt"
+  ],
+  "support_note": "The island picture is widely regarded as major progress, though the exact mechanism is still debated.",
+  "what_happens": [
+    "Early radiation looks thermal and entanglement grows",
+    "After the Page time, entanglement starts to fall",
+    "By the end, the radiation carries the information out"
+  ],
+  "key_numbers": [
+    {
+      "name": "Page time",
+      "value": "when the black hole has lost about half its entropy",
+      "units": "",
+      "source": "Page 1993"
+    }
+  ],
+  "objections": [
+    "Island calculations rely on simplified models"
+  ],
+  "competes_with": [
+    "bh-firewall",
+    "bh-interior-fuzzball",
+    "hawking-evaporation"
+  ],
+  "sources": [
+    {
+      "title": "Information in black hole radiation",
+      "authors": "D. N. Page",
+      "year": 1993,
+      "url": "https://arxiv.org/abs/hep-th/9306083"
+    },
+    {
+      "title": "Entanglement wedge reconstruction and the information paradox",
+      "authors": "G. Penington",
+      "year": 2019,
+      "url": "https://arxiv.org/abs/1905.08255"
+    },
+    {
+      "title": "The entropy of bulk quantum fields and the entanglement wedge of an evaporating black hole",
+      "authors": "A. Almheiri, N. Engelhardt, D. Marolf, H. Maxfield",
+      "year": 2019,
+      "url": "https://arxiv.org/abs/1905.08762"
+    }
+  ]
+}

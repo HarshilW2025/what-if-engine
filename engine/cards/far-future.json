@@ -1,0 +1,61 @@
+{
+  "id": "far-future",
+  "title": "The far future: heat death and proton decay",
+  "status": "theory",
+  "support": "mainstream-candidate",
+  "concepts": [
+    "end of the universe",
+    "heat death",
+    "proton decay",
+    "far future",
+    "black hole evaporation"
+  ],
+  "example_questions": [
+    "How will the universe end?",
+    "What happens in a trillion trillion years?"
+  ],
+  "summary": "With a cosmological constant, the universe expands forever. Stars stop forming, the last stars burn out, black holes evaporate by Hawking radiation, and the universe approaches a cold, dark, nearly empty heat death. If protons decay, as many grand unified theories predict, even ordinary matter eventually dissolves, though experiments show protons live far longer than the current age of the universe.",
+  "proponents": [
+    "Fred Adams",
+    "Gregory Laughlin"
+  ],
+  "support_note": "The standard expectation for a universe with a cosmological constant; proton decay is unconfirmed.",
+  "what_happens": [
+    "Star formation ends and the last stars fade",
+    "Dead stars and black holes dominate",
+    "Protons may decay",
+    "Black holes evaporate",
+    "A cold, dilute, dark universe remains"
+  ],
+  "key_numbers": [
+    {
+      "name": "Lower limit on proton lifetime (p to e+ pi0)",
+      "value": "1.6e34",
+      "units": "years",
+      "source": "Super-Kamiokande 2017"
+    }
+  ],
+  "objections": [
+    "Depends on dark energy staying constant"
+  ],
+  "competes_with": [
+    "big-rip",
+    "vacuum-decay",
+    "evolving-dark-energy",
+    "conformal-cyclic-cosmology"
+  ],
+  "sources": [
+    {
+      "title": "A dying universe: the long-term fate and evolution of astrophysical objects",
+      "authors": "F. C. Adams, G. Laughlin",
+      "year": 1997,
+      "url": "https://arxiv.org/abs/astro-ph/9701131"
+    },
+    {
+      "title": "Search for proton decay via p to e+ pi0 and p to mu+ pi0 in 0.31 megaton years exposure of the Super-Kamiokande Water Cherenkov Detector",
+      "authors": "Super-Kamiokande Collaboration",
+      "year": 2017,
+      "url": "https://arxiv.org/abs/1610.03597"
+    }
+  ]
+}

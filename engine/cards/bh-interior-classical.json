@@ -1,0 +1,63 @@
+{
+  "id": "bh-interior-classical",
+  "title": "Inside a black hole: the classical singularity",
+  "status": "exact-model",
+  "support": "consensus",
+  "concepts": [
+    "black hole",
+    "event horizon",
+    "singularity",
+    "spaghettification",
+    "falling into a black hole"
+  ],
+  "example_questions": [
+    "What if you fell into a black hole?",
+    "What is inside a black hole?"
+  ],
+  "summary": "General relativity predicts that once inside the horizon, everything reaches the central singularity in a finite proper time. Tidal forces stretch infalling objects (spaghettification). For stellar mass black holes this happens before the horizon; for supermassive ones you cross the horizon unharmed. Most physicists expect quantum gravity to replace the singularity, so this is GR's prediction rather than the final word.",
+  "proponents": [
+    "Roger Penrose",
+    "Karl Schwarzschild"
+  ],
+  "support_note": "This is what GR predicts (Penrose's theorem); most expect quantum effects to modify the very centre.",
+  "what_happens": [
+    "Distant observers see the faller slow and redden at the horizon",
+    "The faller crosses the horizon in finite time",
+    "Tidal stretching grows",
+    "The singularity is reached within a maximum proper time of pi G M / c^3"
+  ],
+  "key_numbers": [
+    {
+      "name": "Maximum time from horizon to singularity, 10 solar masses",
+      "value": "about 1.5e-4",
+      "units": "s",
+      "source": "pi G M / c^3"
+    },
+    {
+      "name": "Maximum time from horizon to singularity, Sagittarius A*",
+      "value": "about 67",
+      "units": "s",
+      "source": "pi G M / c^3 with M = 4.3e6 solar masses"
+    }
+  ],
+  "equations": [
+    "r_s = 2 G M / c^2",
+    "tau_max = pi G M / c^3"
+  ],
+  "objections": [
+    "Singularities signal the breakdown of GR"
+  ],
+  "competes_with": [
+    "bh-interior-fuzzball",
+    "bh-firewall",
+    "planck-star"
+  ],
+  "sources": [
+    {
+      "title": "Gravitational collapse and space-time singularities",
+      "authors": "R. Penrose",
+      "year": 1965,
+      "url": "https://doi.org/10.1103/PhysRevLett.14.57"
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "id": "mond",
+  "title": "MOND (modified gravity instead of dark matter)",
+  "status": "contested",
+  "support": "minority",
+  "concepts": [
+    "dark matter",
+    "modified gravity",
+    "galaxy rotation",
+    "MOND",
+    "gravity"
+  ],
+  "example_questions": [
+    "What if dark matter does not exist?",
+    "Why do galaxies spin so fast?"
+  ],
+  "summary": "Modified Newtonian Dynamics proposes that gravity strengthens at very low accelerations, explaining flat galaxy rotation curves without dark matter. It predicts galaxy scale regularities remarkably well but struggles with galaxy clusters and the cosmic microwave background, where dark matter works better.",
+  "proponents": [
+    "Mordehai Milgrom",
+    "Stacy McGaugh"
+  ],
+  "support_note": "Dark matter is the consensus; MOND is a persistent minority alternative.",
+  "what_happens": [
+    "At high accelerations gravity is Newtonian",
+    "Below about 1.2e-10 m/s^2 it falls off more slowly",
+    "Outer stars orbit faster than visible mass alone would allow"
+  ],
+  "key_numbers": [
+    {
+      "name": "MOND acceleration scale a0",
+      "value": "about 1.2e-10",
+      "units": "m/s^2",
+      "source": "Famaey and McGaugh 2012"
+    }
+  ],
+  "equations": [
+    "deep MOND: a = sqrt(G M a0) / r"
+  ],
+  "objections": [
+    "Galaxy clusters such as the Bullet Cluster",
+    "The CMB power spectrum"
+  ],
+  "competes_with": [],
+  "sources": [
+    {
+      "title": "A modification of the Newtonian dynamics as a possible alternative to the hidden mass hypothesis",
+      "authors": "M. Milgrom",
+      "year": 1983,
+      "url": "https://doi.org/10.1086/161130"
+    },
+    {
+      "title": "Modified Newtonian Dynamics (MOND): Observational Phenomenology and Relativistic Extensions",
+      "authors": "B. Famaey, S. McGaugh",
+      "year": 2012,
+      "url": "https://arxiv.org/abs/1112.3960"
+    },
+    {
+      "title": "A direct empirical proof of the existence of dark matter",
+      "authors": "D. Clowe et al.",
+      "year": 2006,
+      "url": "https://arxiv.org/abs/astro-ph/0608407"
+    }
+  ]
+}

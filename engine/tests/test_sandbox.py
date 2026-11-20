@@ -58,3 +58,22 @@ def test_failed_check_is_visible():
 def test_bad_shapes_are_explained():
     with pytest.raises(ModelError, match="expected shape"):
         run_model("import numpy as np\nimport wie\ns = wie.Scene(np.linspace(0, 1, 10))\ns.body('A', np.zeros((5, 3)), 1.0)\n")
+
+
+def test_numpy_methods_and_thinning_work():
+    code = """
+import numpy as np
+import wie
+t = np.linspace(0, 1, 200)
+s = wie.Scene(t)
+pts = np.zeros((200, 1500, 3)) + t[:, None, None]
+s.cloud("dust", pts, temperature=np.full(1500, 3000.0))
+s.body("A", [0, 0, 0], 1.0)
+s.number("mean", pts.mean(), "")
+s.number("area", np.trapezoid(t, t), "")
+s.check("max", pts.max(), 1.0)
+"""
+    scene = run_model(code)
+    assert scene["thinned"] >= 2
+    assert "temperature_each" in scene["clouds"][0]
+    assert scene["diagnostics"]["checks"][0]["passed"]

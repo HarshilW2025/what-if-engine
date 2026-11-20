@@ -1,0 +1,65 @@
+{
+  "id": "hawking-evaporation",
+  "title": "Hawking evaporation of black holes",
+  "status": "exact-model",
+  "support": "consensus",
+  "concepts": [
+    "black hole",
+    "hawking radiation",
+    "evaporation",
+    "quantum field theory",
+    "black hole temperature"
+  ],
+  "example_questions": [
+    "What if a black hole evaporated?",
+    "How long does a black hole live?"
+  ],
+  "summary": "Quantum fields near a black hole horizon make it glow like a black body with a temperature inversely proportional to its mass. It slowly loses mass, gets hotter and evaporates faster, ending in a final burst. The prediction is semi-classical and widely accepted by theorists, but it has never been observed because stellar mass black holes are far colder than the cosmic microwave background.",
+  "proponents": [
+    "Stephen Hawking"
+  ],
+  "support_note": "Accepted as a robust theoretical prediction; no direct observation yet.",
+  "what_happens": [
+    "The black hole radiates a faint thermal glow",
+    "Smaller means hotter, so evaporation speeds up",
+    "The final moments release the remaining mass as a burst of radiation"
+  ],
+  "key_numbers": [
+    {
+      "name": "Temperature of a one solar mass black hole",
+      "value": "about 6e-8",
+      "units": "K",
+      "source": "T = hbar c^3 / (8 pi G M k_B)"
+    },
+    {
+      "name": "Lifetime of a one solar mass black hole",
+      "value": "about 2e67",
+      "units": "years",
+      "source": "t is proportional to M^3"
+    }
+  ],
+  "equations": [
+    "T = hbar c^3 / (8 pi G M k_B)",
+    "t_evap ~ 5120 pi G^2 M^3 / (hbar c^4)"
+  ],
+  "objections": [
+    "Raises the information paradox: what happens to what fell in"
+  ],
+  "competes_with": [
+    "planck-star"
+  ],
+  "sources": [
+    {
+      "title": "Black hole explosions?",
+      "authors": "S. W. Hawking",
+      "year": 1974,
+      "url": "https://doi.org/10.1038/248030a0"
+    },
+    {
+      "title": "Particle creation by black holes",
+      "authors": "S. W. Hawking",
+      "year": 1975,
+      "url": "https://doi.org/10.1007/BF02345020"
+    }
+  ]
+}

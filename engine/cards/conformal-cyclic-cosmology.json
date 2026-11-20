@@ -1,0 +1,65 @@
+{
+  "id": "conformal-cyclic-cosmology",
+  "title": "Conformal cyclic cosmology",
+  "status": "contested",
+  "support": "minority",
+  "concepts": [
+    "cyclic universe",
+    "aeon",
+    "big bang",
+    "hawking points",
+    "end of the universe"
+  ],
+  "example_questions": [
+    "What happened before the Big Bang?",
+    "Will the universe start again?"
+  ],
+  "summary": "The universe passes through an endless chain of aeons. When an aeon is so far in the future that only massless radiation remains, it has no sense of scale and can be mathematically identified with the Big Bang of the next aeon. Penrose and collaborators claim traces of the previous aeon (circles and Hawking points) in the cosmic microwave background.",
+  "proponents": [
+    "Roger Penrose",
+    "Vahe Gurzadyan"
+  ],
+  "support_note": "Claimed CMB evidence has been disputed by independent analyses.",
+  "what_happens": [
+    "An aeon expands until only radiation is left",
+    "Its infinite future becomes the next Big Bang",
+    "Black hole evaporation in the old aeon leaves Hawking points in the new sky"
+  ],
+  "key_numbers": [
+    {
+      "name": "Confidence of Hawking point excess after reanalysis",
+      "value": "87",
+      "units": "percent (little more than 1 sigma)",
+      "source": "Jow and Scott 2020"
+    }
+  ],
+  "objections": [
+    "Requires all massive particles to eventually lose mass",
+    "Independent CMB analyses find no significant signal"
+  ],
+  "competes_with": [
+    "ekpyrotic-cyclic",
+    "no-boundary",
+    "eternal-inflation"
+  ],
+  "sources": [
+    {
+      "title": "Concentric circles in WMAP data may provide evidence of violent pre-Big-Bang activity",
+      "authors": "V. G. Gurzadyan, R. Penrose",
+      "year": 2010,
+      "url": "https://arxiv.org/abs/1011.3706"
+    },
+    {
+      "title": "Apparent evidence for Hawking points in the CMB sky",
+      "authors": "D. An, K. A. Meissner, P. Nurowski, R. Penrose",
+      "year": 2018,
+      "url": "https://arxiv.org/abs/1808.01740"
+    },
+    {
+      "title": "Re-evaluating evidence for Hawking points in the CMB",
+      "authors": "D. L. Jow, D. Scott",
+      "year": 2020,
+      "url": "https://arxiv.org/abs/1909.09672"
+    }
+  ]
+}

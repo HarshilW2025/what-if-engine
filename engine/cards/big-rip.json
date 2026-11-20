@@ -1,0 +1,56 @@
+{
+  "id": "big-rip",
+  "title": "Big Rip (phantom dark energy)",
+  "status": "theory",
+  "support": "minority",
+  "concepts": [
+    "dark energy",
+    "phantom energy",
+    "end of the universe",
+    "expansion",
+    "w less than -1"
+  ],
+  "example_questions": [
+    "How will the universe end?",
+    "What if dark energy kept getting stronger?"
+  ],
+  "summary": "If dark energy has an equation of state w below -1 (phantom energy), its density grows as space expands. The expansion accelerates without limit and in finite time tears apart galaxy clusters, galaxies, solar systems, planets and finally atoms.",
+  "proponents": [
+    "Robert Caldwell",
+    "Marc Kamionkowski",
+    "Nevin Weinberg"
+  ],
+  "support_note": "A possible fate if w < -1; current data are consistent with w close to -1, so it is not favoured.",
+  "what_happens": [
+    "Expansion accelerates ever faster",
+    "About 60 million years before the end the Milky Way is torn apart",
+    "About 3 months before, the Solar System comes apart",
+    "About 30 minutes before, Earth explodes",
+    "About 1e-19 s before, atoms are ripped apart"
+  ],
+  "key_numbers": [
+    {
+      "name": "Time to the Big Rip for w = -1.5",
+      "value": "about 22",
+      "units": "billion years from now",
+      "source": "Caldwell, Kamionkowski and Weinberg 2003"
+    }
+  ],
+  "objections": [
+    "Phantom energy violates the null energy condition and tends to be unstable",
+    "Measurements favour w near -1"
+  ],
+  "competes_with": [
+    "evolving-dark-energy",
+    "far-future",
+    "vacuum-decay"
+  ],
+  "sources": [
+    {
+      "title": "Phantom energy and cosmic doomsday",
+      "authors": "R. R. Caldwell, M. Kamionkowski, N. N. Weinberg",
+      "year": 2003,
+      "url": "https://arxiv.org/abs/astro-ph/0302506"
+    }
+  ]
+}

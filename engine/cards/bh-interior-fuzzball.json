@@ -1,0 +1,42 @@
+{
+  "id": "bh-interior-fuzzball",
+  "title": "Fuzzballs",
+  "status": "theory",
+  "support": "minority",
+  "concepts": [
+    "black hole",
+    "string theory",
+    "event horizon",
+    "information paradox",
+    "falling into a black hole"
+  ],
+  "example_questions": [
+    "What is inside a black hole?",
+    "What if black holes have no inside?"
+  ],
+  "summary": "In string theory's fuzzball proposal, a black hole is not empty space around a singularity. It is a tangled ball of strings and branes filling the region up to where the horizon would be. There is no interior and no singularity, and information is stored in the structure itself.",
+  "proponents": [
+    "Samir Mathur"
+  ],
+  "support_note": "An active string theory programme; not widely accepted as the full answer.",
+  "what_happens": [
+    "An infalling object reaches the fuzzball surface near the horizon radius",
+    "It merges with the stringy structure instead of falling to a centre"
+  ],
+  "key_numbers": [],
+  "objections": [
+    "Conflicts with the equivalence principle expectation of a smooth horizon"
+  ],
+  "competes_with": [
+    "bh-interior-classical",
+    "bh-firewall"
+  ],
+  "sources": [
+    {
+      "title": "The fuzzball proposal for black holes: an elementary review",
+      "authors": "S. D. Mathur",
+      "year": 2005,
+      "url": "https://arxiv.org/abs/hep-th/0502050"
+    }
+  ]
+}

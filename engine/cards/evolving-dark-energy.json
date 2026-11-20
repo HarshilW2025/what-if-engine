@@ -1,0 +1,59 @@
+{
+  "id": "evolving-dark-energy",
+  "title": "Evolving dark energy (DESI)",
+  "status": "measured-hint",
+  "support": "significant-minority",
+  "concepts": [
+    "dark energy",
+    "DESI",
+    "expansion",
+    "cosmological constant",
+    "baryon acoustic oscillations"
+  ],
+  "example_questions": [
+    "What if dark energy is weakening?",
+    "Is the expansion of the universe changing?"
+  ],
+  "summary": "DESI's measurements of baryon acoustic oscillations, combined with the cosmic microwave background and supernovae, prefer dark energy whose strength changes over time (w0 above -1, wa below 0) over a constant cosmological constant. If real, dark energy may be weakening, changing the long term future of the universe.",
+  "proponents": [
+    "DESI Collaboration"
+  ],
+  "support_note": "A statistical preference, not yet a discovery; possible unknown systematics are being checked.",
+  "what_happens": [
+    "Dark energy was stronger in the past and is weakening now",
+    "Expansion still accelerates today but could slow in the far future"
+  ],
+  "key_numbers": [
+    {
+      "name": "Preference for evolving dark energy over a cosmological constant",
+      "value": "2.8 to 4.2",
+      "units": "sigma, depending on the supernova sample",
+      "source": "DESI DR2 2025"
+    },
+    {
+      "name": "Preference using DESI BAO plus CMB alone",
+      "value": "3.1",
+      "units": "sigma",
+      "source": "DESI DR2 2025"
+    }
+  ],
+  "equations": [
+    "w(a) = w0 + wa (1 - a)"
+  ],
+  "objections": [
+    "Below the 5 sigma discovery threshold",
+    "Depends on which supernova sample is used"
+  ],
+  "competes_with": [
+    "big-rip",
+    "far-future"
+  ],
+  "sources": [
+    {
+      "title": "DESI DR2 Results II: Measurements of Baryon Acoustic Oscillations and Cosmological Constraints",
+      "authors": "DESI Collaboration",
+      "year": 2025,
+      "url": "https://arxiv.org/abs/2503.14738"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "id": "cosmological-natural-selection",
+  "title": "Cosmological natural selection",
+  "status": "theory",
+  "support": "minority",
+  "concepts": [
+    "multiverse",
+    "black hole",
+    "baby universe",
+    "constants of nature",
+    "evolution"
+  ],
+  "example_questions": [
+    "Why are the laws of physics fine tuned?",
+    "What if every black hole made a new universe?"
+  ],
+  "summary": "Each black hole spawns a new universe whose physical constants are slightly mutated from its parent's. Universes whose constants favour black holes leave more offspring, so a typical universe should be tuned to make many black holes. This offers an evolutionary explanation for why constants look fine tuned.",
+  "proponents": [
+    "Lee Smolin"
+  ],
+  "support_note": "Makes testable predictions but has few supporters.",
+  "what_happens": [
+    "Each black hole births a child universe",
+    "Constants mutate slightly each generation",
+    "Over generations, black hole friendly universes dominate"
+  ],
+  "key_numbers": [],
+  "objections": [
+    "The mechanism for creating universes in black holes is assumed, not derived"
+  ],
+  "competes_with": [
+    "eternal-inflation",
+    "poplawski-torsion"
+  ],
+  "sources": [
+    {
+      "title": "Did the universe evolve?",
+      "authors": "L. Smolin",
+      "year": 1992,
+      "url": "https://doi.org/10.1088/0264-9381/9/1/016"
+    },
+    {
+      "title": "The status of cosmological natural selection",
+      "authors": "L. Smolin",
+      "year": 2006,
+      "url": "https://arxiv.org/abs/hep-th/0612185"
+    }
+  ]
+}

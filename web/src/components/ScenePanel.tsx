@@ -56,6 +56,24 @@ export default function ScenePanel({ resp }: { resp: SimResponse }) {
                   <span className="w-32 shrink-0 text-right text-[10px] text-zinc-400">{SUPPORT[t.support].label}</span>
                 </div>
                 <p className="mt-1.5 text-[12px] leading-relaxed text-zinc-300">{t.summary}</p>
+                {(() => {
+                  const ref = t.card ? s.card_refs?.find((r) => r.id === t.card) : undefined;
+                  if (!ref) return <div className="mt-1.5 text-[11px] text-zinc-500">From Claude&apos;s own knowledge, not yet card verified</div>;
+                  return (
+                    <div className="mt-1.5 text-[11px] leading-relaxed">
+                      <span className="text-emerald-400">✓ Theory card</span>
+                      {ref.sources.map((src, k) => (
+                        <span key={k}>
+                          {k === 0 ? " · " : ", "}
+                          <a href={src.url} target="_blank" rel="noreferrer" className="text-amber-300/80 underline hover:text-amber-300">
+                            {src.title || src.url}
+                            {src.year ? ` (${src.year})` : ""}
+                          </a>
+                        </span>
+                      ))}
+                    </div>
+                  );
+                })()}
               </div>
             ))}
           </div>

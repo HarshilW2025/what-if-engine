@@ -91,7 +91,7 @@ SCIPY_SUBS = {m.split(".", 1)[1] for m in ALLOWED if m.startswith("scipy.")}
 _real_import = builtins.__import__
 
 def _guarded_import(name, globals=None, locals=None, fromlist=(), level=0):
-    if level != 0 or name not in ALLOWED:
+    if level != 0 or (name not in ALLOWED and not name.startswith(("numpy.", "scipy."))):
         raise ImportError(f"import of '{name}' is not allowed in models")
     if name == "scipy":
         for f in fromlist or ():

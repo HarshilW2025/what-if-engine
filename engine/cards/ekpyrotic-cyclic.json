@@ -1,0 +1,56 @@
+{
+  "id": "ekpyrotic-cyclic",
+  "title": "Ekpyrotic and cyclic universe",
+  "status": "theory",
+  "support": "significant-minority",
+  "concepts": [
+    "big bang",
+    "bounce",
+    "branes",
+    "cyclic universe",
+    "before the big bang",
+    "inflation alternative"
+  ],
+  "example_questions": [
+    "What happened before the Big Bang?",
+    "Did the universe bounce?"
+  ],
+  "summary": "Instead of inflation, the early universe went through a slow contracting phase that smoothed it out. The Big Bang was a bounce, pictured in the original version as the collision of two branes in a higher dimension. In the cyclic version, this repeats: expansion, contraction, bounce.",
+  "proponents": [
+    "Paul Steinhardt",
+    "Neil Turok",
+    "Justin Khoury",
+    "Burt Ovrut"
+  ],
+  "support_note": "The main alternative to inflation; a minority of cosmologists but actively studied.",
+  "what_happens": [
+    "The universe slowly contracts and smooths out",
+    "A bounce replaces the singularity",
+    "Hot Big Bang expansion follows",
+    "In the cyclic version the process repeats"
+  ],
+  "key_numbers": [],
+  "objections": [
+    "The bounce physics is not fully worked out",
+    "Inflation fits current data well"
+  ],
+  "competes_with": [
+    "eternal-inflation",
+    "no-boundary",
+    "conformal-cyclic-cosmology"
+  ],
+  "sources": [
+    {
+      "title": "The Ekpyrotic Universe: Colliding Branes and the Origin of the Hot Big Bang",
+      "authors": "J. Khoury, B. A. Ovrut, P. J. Steinhardt, N. Turok",
+      "year": 2001,
+      "url": "https://arxiv.org/abs/hep-th/0103239"
+    },
+    {
+      "title": "A cyclic model of the universe",
+      "authors": "P. J. Steinhardt, N. Turok",
+      "year": 2002,
+      "url": "https://arxiv.org/abs/hep-th/0111098"
+    }
+  ]
+}

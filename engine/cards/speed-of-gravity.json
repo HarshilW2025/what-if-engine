@@ -1,0 +1,54 @@
+{
+  "id": "speed-of-gravity",
+  "title": "Speed of gravity: instant vs delayed",
+  "status": "exact-model",
+  "support": "consensus",
+  "concepts": [
+    "speed of gravity",
+    "gravitational waves",
+    "instant gravity",
+    "aberration",
+    "orbits"
+  ],
+  "example_questions": [
+    "What if gravity travelled instantly?",
+    "What if the Sun vanished, when would Earth notice?"
+  ],
+  "summary": "In general relativity, changes in gravity travel at the speed of light. A naive delayed Newtonian force (pulling toward where a body was) makes orbits spiral outward and fall apart, which is why Laplace concluded gravity must be nearly instant. General relativity avoids that because velocity dependent terms almost cancel the aberration, so orbits stay stable while gravitational waves still move at light speed.",
+  "proponents": [
+    "Pierre-Simon Laplace",
+    "Steven Carlip"
+  ],
+  "support_note": "The neutron star merger GW170817 showed gravitational waves and light arriving together, pinning the speed of gravity to light speed to about one part in 10^15.",
+  "what_happens": [
+    "With instant gravity, orbits are stable as in Newton's theory",
+    "With naively delayed gravity, every orbit gains energy and the planets drift outward",
+    "In general relativity the cancellation keeps orbits stable, and changes still propagate at c"
+  ],
+  "key_numbers": [
+    {
+      "name": "Speed of gravitational waves relative to light",
+      "value": "between -3e-15 and +7e-16",
+      "units": "fractional difference",
+      "source": "LIGO, Virgo, Fermi and INTEGRAL 2017"
+    }
+  ],
+  "objections": [
+    "The naive delayed model is not a real theory; it shows why the details of general relativity matter"
+  ],
+  "competes_with": [],
+  "sources": [
+    {
+      "title": "Aberration and the speed of gravity",
+      "authors": "S. Carlip",
+      "year": 2000,
+      "url": "https://arxiv.org/abs/gr-qc/9909087"
+    },
+    {
+      "title": "Gravitational waves and gamma-rays from a binary neutron star merger: GW170817 and GRB 170817A",
+      "authors": "LIGO Scientific Collaboration, Virgo Collaboration, Fermi GBM, INTEGRAL",
+      "year": 2017,
+      "url": "https://arxiv.org/abs/1710.05834"
+    }
+  ]
+}

@@ -1,3 +1,5 @@
+import copy
+import json
 import logging
 import os
 
@@ -5,8 +7,9 @@ import anthropic
 from anthropic import Anthropic
 from pydantic import ValidationError
 
+from app.ai import cards as card_lib
 from app.ai.model_spec import ModelSpec
-from app.ai.prompts import COMPOSER_SYSTEM
+from app.ai.prompts import CARDS_NOTE, COMPOSER_SYSTEM
 from app.engines import run_spec
 from app.engines.errors import EngineError
 from app.sandbox.runner import ModelError, run_model
@@ -45,12 +48,29 @@ def get_client() -> Anthropic:
     return _client
 
 
+def _orbits_schema() -> dict:
+    s = copy.deepcopy(spec_json_schema())
+    params = s.get("properties", {}).get("params", {})
+    keep = ("GravityParams", "NoSimParams")
+    for key in ("oneOf", "anyOf"):
+        if key in params:
+            kept = [r for r in params[key] if r.get("$ref", "").split("/")[-1] in keep]
+            if kept:
+                params[key] = kept
+    mapping = params.get("discriminator", {}).get("mapping")
+    if mapping:
+        kept_map = {k: v for k, v in mapping.items() if v.split("/")[-1] in keep}
+        if kept_map:
+            params["discriminator"]["mapping"] = kept_map
+    return s
+
+
 def _tools() -> list[dict]:
     return [
         {
             "name": TOOL_ORBITS,
             "description": "N-body gravity simulation for bodies moving under gravity. Also tier 'unknown' with engine 'none' for questions that are not physics.",
-            "input_schema": spec_json_schema(),
+            "input_schema": _orbits_schema(),
         },
         {
             "name": TOOL_MODEL,
@@ -78,8 +98,14 @@ def _call(client: Anthropic, messages: list[dict]):
 def ask(question: str) -> dict:
     """question -> Claude picks a tool -> validate -> run -> self checks. Up to two repair rounds."""
     client = get_client()
-    messages: list[dict] = [{"role": "user", "content": f"Question: {question}"}]
-    meta = {"model": MODEL, "attempts": 0, "input_tokens": 0, "output_tokens": 0, "route": None}
+    library, _ = card_lib.load_cards()
+    found = card_lib.retrieve(question, library)
+    by_id = {c.id: c for c in found}
+    content = f"Question: {question}"
+    if found:
+        content += "\n\n" + CARDS_NOTE + "\n" + "\n".join(f'<card id="{c.id}">{json.dumps(c.for_prompt())}</card>' for c in found)
+    messages: list[dict] = [{"role": "user", "content": content}]
+    meta = {"model": MODEL, "attempts": 0, "input_tokens": 0, "output_tokens": 0, "route": None, "cards_retrieved": list(by_id)}
 
     for attempt in range(1, MAX_ATTEMPTS + 1):
         meta["attempts"] = attempt
@@ -110,14 +136,22 @@ def ask(question: str) -> dict:
                     f"{c['name']}: got {c['value']:.6g}, expected {c['expected']:.6g}" for c in failed
                 ) + ". Fix the physics, do not loosen the checks."
             else:
+                theories = []
+                for th in m.theories:
+                    d = th.model_dump()
+                    if d.get("card") not in by_id:
+                        d["card"] = None  # strip any citation to a card we did not supply
+                    theories.append(d)
+                used = sorted({d["card"] for d in theories if d["card"]})
                 spec = {
                     "tier": m.tier,
                     "title": m.title,
                     "question": question,
                     "params": {"engine": "model", "code": m.code},
-                    "cards": [],
+                    "cards": used,
+                    "card_refs": [by_id[i].ref() for i in used],
                     "assumptions": m.assumptions,
-                    "theories": [t.model_dump() for t in m.theories],
+                    "theories": theories,
                 }
                 return {"spec": spec, "result": scene, "meta": meta}
         except ValidationError as e:

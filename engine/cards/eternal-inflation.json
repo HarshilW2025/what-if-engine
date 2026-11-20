@@ -1,0 +1,47 @@
+{
+  "id": "eternal-inflation",
+  "title": "Eternal inflation and the multiverse",
+  "status": "theory",
+  "support": "mainstream-candidate",
+  "concepts": [
+    "inflation",
+    "multiverse",
+    "bubble universes",
+    "big bang",
+    "before the big bang"
+  ],
+  "example_questions": [
+    "Are there other universes?",
+    "What happened before the Big Bang?"
+  ],
+  "summary": "In many models of cosmic inflation, inflation never ends everywhere at once. Quantum fluctuations keep some regions inflating forever while others stop and become bubble universes like ours. The result is an endless multiverse of bubbles, possibly with different physical laws.",
+  "proponents": [
+    "Alan Guth",
+    "Andrei Linde",
+    "Alexander Vilenkin"
+  ],
+  "support_note": "Inflation is the leading early universe theory; whether it is eternal and creates a multiverse is debated.",
+  "what_happens": [
+    "Space inflates exponentially",
+    "Inflation ends in patches, forming bubble universes",
+    "Between bubbles, space keeps inflating forever"
+  ],
+  "key_numbers": [],
+  "objections": [
+    "Hard or impossible to test directly",
+    "The measure problem makes probabilities ambiguous"
+  ],
+  "competes_with": [
+    "ekpyrotic-cyclic",
+    "no-boundary",
+    "cosmological-natural-selection"
+  ],
+  "sources": [
+    {
+      "title": "Eternal inflation and its implications",
+      "authors": "A. H. Guth",
+      "year": 2007,
+      "url": "https://arxiv.org/abs/hep-th/0702178"
+    }
+  ]
+}

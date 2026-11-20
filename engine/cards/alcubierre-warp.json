@@ -1,0 +1,52 @@
+{
+  "id": "alcubierre-warp",
+  "title": "Alcubierre warp drive",
+  "status": "theory",
+  "support": "fringe",
+  "concepts": [
+    "warp drive",
+    "faster than light",
+    "spacetime",
+    "negative energy",
+    "travel"
+  ],
+  "example_questions": [
+    "What if we built a warp drive?",
+    "Could we travel faster than light?"
+  ],
+  "summary": "Alcubierre found a solution of general relativity where a bubble of flat space is carried along by contracting space in front and expanding space behind, letting the ship arrive faster than light without locally exceeding light speed. It requires large amounts of negative energy that no known matter provides. Lentz proposed positive energy soliton variants, which remain disputed.",
+  "proponents": [
+    "Miguel Alcubierre",
+    "Erik Lentz"
+  ],
+  "support_note": "Mathematically valid in general relativity; physically realisable versions are considered very unlikely.",
+  "what_happens": [
+    "Space contracts ahead of the bubble and expands behind it",
+    "The ship inside feels no acceleration",
+    "The bubble can move faster than light relative to distant observers"
+  ],
+  "key_numbers": [],
+  "objections": [
+    "Requires exotic negative energy",
+    "Horizons form, so the crew cannot steer or stop the bubble",
+    "Could enable time travel paradoxes"
+  ],
+  "competes_with": [
+    "traversable-wormhole",
+    "tachyons-ftl"
+  ],
+  "sources": [
+    {
+      "title": "The warp drive: hyper-fast travel within general relativity",
+      "authors": "M. Alcubierre",
+      "year": 1994,
+      "url": "https://arxiv.org/abs/gr-qc/0009013"
+    },
+    {
+      "title": "Breaking the Warp Barrier: Hyper-Fast Solitons in Einstein-Maxwell-Plasma Theory",
+      "authors": "E. W. Lentz",
+      "year": 2021,
+      "url": "https://arxiv.org/abs/2006.07125"
+    }
+  ]
+}
