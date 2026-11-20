@@ -47,13 +47,7 @@ export default function AnswerPanel({ resp }: { resp: SimResponse }) {
           )}
         </div>
         <h2 className="font-display text-xl font-semibold leading-snug">{spec.title}</h2>
-        <p className="mt-1 text-zinc-400">{spec.question}</p>
-        {resp.meta?.bank && (
-          <p className="mt-1 text-[11px] text-sky-300">
-            ⚡ Verified answer from the bank
-            {resp.meta.asked && resp.meta.asked.trim().toLowerCase() !== spec.question.trim().toLowerCase() ? `, matched to your question "${resp.meta.asked}"` : ""}
-          </p>
-        )}
+        <p className="mt-1 text-zinc-400">{resp.meta?.asked ?? spec.question}</p>
       </div>
 
       <Section title="Answer">

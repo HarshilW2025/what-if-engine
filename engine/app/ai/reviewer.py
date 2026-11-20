@@ -118,7 +118,7 @@ def judge(review: dict, scene: dict, names: dict) -> dict:
         rel = abs(theirs - ours) / max(abs(ours), abs(theirs), 1e-300)
         rec = {"name": numbers[i]["name"], "ours": ours, "theirs": theirs, "unit": numbers[i].get("unit", ""), "rel": rel}
         (mismatches if rel > RECOMPUTE_RTOL else matched).append(rec)
-    problems = [str(p) for p in review.get("problems", []) if str(p).strip()]
+    problems = _as_list(review.get("problems"))
     ok = review.get("verdict") == "pass" and not mismatches
     return {"status": "pass" if ok else "fail", "problems": problems, "matched": matched, "mismatches": mismatches}
 
@@ -257,10 +257,20 @@ def review_orbits(client, model: str, question: str, spec_input: dict, res: dict
         if block is None:
             log.warning("orbit reviewer did not call the tool")
             return None
-        problems = [str(p) for p in block.input.get("problems", []) if str(p).strip()]
+        problems = _as_list(block.input.get("problems"))
         ok = block.input.get("verdict") == "pass"
         return {"status": "pass" if ok else "fail", "problems": problems,
                 "tokens": {"input": resp.usage.input_tokens, "output": resp.usage.output_tokens}}
     except Exception:
         log.exception("orbit reviewer unavailable")
         return None
+
+
+def _as_list(v) -> list[str]:
+    """Problems as a list, even when the model sends them as one string (sometimes wrapped in <item> tags)."""
+    if v is None:
+        return []
+    if isinstance(v, str):
+        parts = _re.split(r"</?item>", v) if "<item>" in v else [v]
+        return [p.strip() for p in parts if p.strip()]
+    return [str(p).strip() for p in v if str(p).strip()]
