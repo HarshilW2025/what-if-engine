@@ -1,28 +1,67 @@
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
+import os
+import time
+from collections import defaultdict, deque
+from pathlib import Path
 
-from app.engines import EngineError, run_spec
-from app.spec import ScenarioSpec
+from dotenv import load_dotenv
+
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
+
+from fastapi import FastAPI, HTTPException, Request  # noqa: E402
+from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
+from pydantic import BaseModel, Field  # noqa: E402
+
+from app.ai.composer import ComposeError, ask  # noqa: E402
+from app.engines import run_spec  # noqa: E402
+from app.engines.errors import EngineError  # noqa: E402
+from app.spec import ScenarioSpec  # noqa: E402
 
 app = FastAPI(title="What If Engine")
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",") if o.strip()]
+app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=["*"], allow_headers=["*"])
+
+PER_VISITOR_PER_HOUR = int(os.getenv("ASK_LIMIT_PER_HOUR", "30"))
+GLOBAL_PER_HOUR = int(os.getenv("ASK_GLOBAL_PER_HOUR", "300"))
+_hits: dict[str, deque] = defaultdict(deque)
+_all_hits: deque = deque()
+
+
+def _allow(ip: str) -> bool:
+    now = time.time()
+    for q in (_hits[ip], _all_hits):
+        while q and now - q[0] > 3600:
+            q.popleft()
+    if len(_hits[ip]) >= PER_VISITOR_PER_HOUR or len(_all_hits) >= GLOBAL_PER_HOUR:
+        return False
+    _hits[ip].append(now)
+    _all_hits.append(now)
+    return True
+
+
+class AskRequest(BaseModel):
+    question: str = Field(min_length=3, max_length=500)
 
 
 @app.get("/health")
-def health() -> dict:
+def health():
     return {"ok": True}
 
 
 @app.post("/simulate")
-def simulate(spec: ScenarioSpec) -> dict:
-    # a plain def runs in FastAPI's thread pool, so a long simulation never blocks the server
+def simulate(spec: ScenarioSpec):
     try:
         return run_spec(spec)
-    except EngineError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except EngineError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+
+@app.post("/ask")
+def ask_endpoint(body: AskRequest, request: Request):
+    ip = request.headers.get("x-forwarded-for", "").split(",")[0].strip() or (request.client.host if request.client else "?")
+    if not _allow(ip):
+        raise HTTPException(status_code=429, detail="Too many questions this hour. Try again a bit later.")
+    try:
+        return ask(body.question.strip())
+    except ComposeError as e:
+        raise HTTPException(status_code=422, detail=str(e))
