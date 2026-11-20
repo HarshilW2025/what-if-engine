@@ -202,7 +202,7 @@ function CameraRig({ res, E0, slots }: { res: GravityResult; E0: number; slots: 
 }
 
 /** mouse wheel / trackpad pinch drives our zoom while follow is on (OrbitControls handles it otherwise) */
-function ZoomInput() {
+export function ZoomInput() {
   const gl = useThree((s) => s.gl);
   useEffect(() => {
     const el = gl.domElement;
@@ -556,7 +556,7 @@ function ViewChips({ res }: { res: GravityResult }) {
   );
 }
 
-function ZoomButtons() {
+export function ZoomButtons() {
   const zoomBy = usePlayer((s) => s.zoomBy);
   const fit = usePlayer((s) => s.fit);
   const btn =

@@ -39,7 +39,7 @@ export const usePlayer = create<PlayerState>((set, get) => ({
   setPlayhead: (f) => set({ playhead: f }),
   togglePlay: () => {
     const s = get();
-    const last = s.response?.result.engine === "gravity" ? s.response.result.times.length - 1 : 0;
+    const r = s.response?.result; const last = r && r.engine !== "none" ? r.times.length - 1 : 0;
     if (!s.playing && s.playhead >= last) set({ playhead: 0, playing: true });
     else set({ playing: !s.playing });
   },

@@ -1,0 +1,722 @@
+"use client";
+
+import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
+import { OrbitControls, Stars } from "@react-three/drei";
+import { Bloom, EffectComposer, ToneMapping, Vignette } from "@react-three/postprocessing";
+import { ToneMappingMode } from "postprocessing";
+import { Suspense, useEffect, useMemo, useRef, type RefObject } from "react";
+import * as THREE from "three";
+import { fmt } from "@/lib/fmt";
+import { usePlayer } from "@/lib/store";
+import type { Num, SceneBody, SceneCloud, SceneCurve, SceneResult } from "@/lib/types";
+import { ZoomButtons, ZoomInput } from "./GravityScene";
+import { MAX_STARS, PLANET_FRAG, PLANET_VERT } from "./scene/planetShaders";
+import { SKY_FRAG, SKY_VERT, STAR_FRAG, STAR_VERT } from "./scene/shaders";
+import { glowTexture, kelvinToColor, ringTexture } from "./scene/visuals";
+
+type Slots<T> = { current: (T | null)[] };
+type Controls = {
+  target: THREE.Vector3;
+  addEventListener: (type: string, fn: () => void) => void;
+  removeEventListener: (type: string, fn: () => void) => void;
+};
+
+const MAX_LABELS = 12;
+const DEFAULT_SUN = new THREE.Vector3(1, 0.35, 0.6).normalize();
+const EARTH_TEX = ["/textures/earth/day.jpg", "/textures/earth/night.jpg", "/textures/earth/data.jpg"];
+const KIND_COLOR: Record<string, string> = {
+  planet: "#c79a6b", moon: "#a3a3a3", rock: "#8c7b6b", generic: "#9fb4c8", earth: "#3b6fb6",
+  ship: "#d8dde6", particle: "#ffd9a0", light: "#fff6d8", star: "#ffcc80", blackhole: "#000000",
+};
+const SURFACE_KINDS = new Set(["earth", "planet", "moon", "rock", "generic"]);
+const POINTLIKE = new Set(["particle", "light"]);
+
+// ---------- sampling helpers (physics z-up -> three y-up) ----------
+export function cursor(F: number, playhead: number) {
+  const i = Math.min(Math.max(0, Math.floor(playhead)), F - 1);
+  return { i, j: Math.min(i + 1, F - 1), t: Math.min(1, Math.max(0, playhead - i)) };
+}
+function sampleVec(rows: Num[][] | Num[][][] | undefined, i: number, j: number, t: number, out: THREE.Vector3): boolean {
+  if (!rows) return false;
+  const a = rows[i] as Num[] | undefined;
+  if (!a) return false;
+  const [ax, ay, az] = a;
+  if (ax == null || ay == null || az == null) return false;
+  let x = ax, y = ay, z = az;
+  const b = rows[j] as Num[] | undefined;
+  if (b && t > 0) {
+    const [bx, by, bz] = b;
+    if (bx != null && by != null && bz != null) {
+      x += (bx - x) * t;
+      y += (by - y) * t;
+      z += (bz - z) * t;
+    }
+  }
+  out.set(x, z, -y);
+  return true;
+}
+function sampleNum(arr: Num[] | undefined, i: number, j: number, t: number, fb: number): number {
+  if (!arr) return fb;
+  const a = arr[i];
+  if (a == null) return fb;
+  const b = arr[j];
+  return b == null ? a : a + (b - a) * t;
+}
+function sampleComp(rows: Num[][] | undefined, i: number, j: number, t: number, k: number, fb: number): number {
+  if (!rows) return fb;
+  const a = rows[i]?.[k];
+  if (a == null) return fb;
+  const b = rows[j]?.[k];
+  return b == null ? a : a + (b - a) * t;
+}
+export function sceneTime(res: SceneResult, playhead: number) {
+  const { i, j, t } = cursor(res.times.length, playhead);
+  return res.times[i] + (res.times[j] - res.times[i]) * t;
+}
+
+// ---------- playback: every frame gets equal screen time (the model chose its time sampling) ----------
+function Player({ F }: { F: number }) {
+  const per = Math.min(25, Math.max(12, F / 12)) / F;
+  useFrame((_, delta) => {
+    const s = usePlayer.getState();
+    if (!s.playing) return;
+    const next = s.playhead + (Math.min(delta, 0.1) * s.speed) / per;
+    if (next >= F - 1) usePlayer.setState({ playhead: F - 1, playing: false });
+    else usePlayer.setState({ playhead: next });
+  });
+  return null;
+}
+
+function Sky() {
+  const gl = useThree((s) => s.gl);
+  const scene = useThree((s) => s.scene);
+  const camera = useThree((s) => s.camera);
+  const controls = useThree((s) => s.controls) as unknown as Controls | null;
+  const stars = useRef<THREE.Group>(null);
+  useEffect(() => {
+    const rt = new THREE.WebGLCubeRenderTarget(1024, { type: THREE.HalfFloatType });
+    const skyScene = new THREE.Scene();
+    const geo = new THREE.SphereGeometry(5, 64, 64);
+    const mat = new THREE.ShaderMaterial({ vertexShader: SKY_VERT, fragmentShader: SKY_FRAG, side: THREE.BackSide, depthWrite: false });
+    skyScene.add(new THREE.Mesh(geo, mat));
+    new THREE.CubeCamera(0.1, 100, rt).update(gl, skyScene);
+    geo.dispose();
+    mat.dispose();
+    scene.background = rt.texture;
+    return () => {
+      if (scene.background === rt.texture) scene.background = null;
+      rt.dispose();
+    };
+  }, [gl, scene]);
+  useFrame(() => {
+    const g = stars.current;
+    if (!g) return;
+    g.position.copy(camera.position);
+    const d = controls ? camera.position.distanceTo(controls.target) : camera.position.length();
+    g.scale.setScalar(Math.max(d, 1e-9) * 1.5);
+  });
+  return (
+    <group ref={stars}>
+      <Stars radius={100} depth={50} count={6000} factor={4} saturation={0.3} fade speed={0.3} />
+    </group>
+  );
+}
+
+// ---------- bodies ----------
+type PlanetProps = { res: SceneResult; index: number; slots: Slots<THREE.Group>; starIdx: number[]; meshRef: RefObject<THREE.Mesh | null> };
+
+function PlanetBody({ res, index, slots, starIdx, meshRef, textures }: PlanetProps & { textures: THREE.Texture[] | null }) {
+  const b = res.bodies[index];
+  const F = res.times.length;
+  const kind = b.kind === "earth" && textures ? 0 : 1;
+  const mat = useMemo(
+    () =>
+      new THREE.ShaderMaterial({
+        uniforms: {
+          uKind: { value: kind },
+          uColor: { value: new THREE.Color(b.color ?? KIND_COLOR[b.kind] ?? "#aaaaaa") },
+          uDay: { value: textures?.[0] ?? null },
+          uNight: { value: textures?.[1] ?? null },
+          uData: { value: textures?.[2] ?? null },
+          uStarDir: { value: Array.from({ length: MAX_STARS }, () => new THREE.Vector3()) },
+          uStarCol: { value: Array.from({ length: MAX_STARS }, () => new THREE.Color()) },
+          uStarFlux: { value: new Array<number>(MAX_STARS).fill(0) },
+          uStarCount: { value: 0 },
+          uTemp: { value: 288 },
+          uTime: { value: 0 },
+          uCam: { value: new THREE.Vector3() },
+        },
+        vertexShader: PLANET_VERT,
+        fragmentShader: PLANET_FRAG,
+      }),
+    [kind, textures, b.color, b.kind],
+  );
+  useEffect(() => () => mat.dispose(), [mat]);
+  const tmp = useMemo(() => new THREE.Vector3(), []);
+
+  useFrame((state) => {
+    const self = slots.current[index];
+    if (!self) return;
+    const u = mat.uniforms;
+    let k = 0;
+    for (const si of starIdx) {
+      const g = slots.current[si];
+      if (!g || !g.visible || k >= MAX_STARS) continue;
+      tmp.copy(g.position).sub(self.position);
+      if (tmp.lengthSq() === 0) continue;
+      u.uStarDir.value[k].copy(tmp.normalize());
+      u.uStarCol.value[k].set(1, 0.97, 0.92);
+      u.uStarFlux.value[k] = 3;
+      k++;
+    }
+    if (k === 0) {
+      u.uStarDir.value[0].copy(DEFAULT_SUN);
+      u.uStarCol.value[0].set(1, 0.97, 0.92);
+      u.uStarFlux.value[0] = 3;
+      k = 1;
+    }
+    u.uStarCount.value = k;
+    const { i, j, t } = cursor(F, usePlayer.getState().playhead);
+    u.uTemp.value = sampleNum(b.temperature, i, j, t, 288);
+    u.uTime.value = state.clock.elapsedTime;
+    u.uCam.value.copy(state.camera.position);
+  });
+
+  return (
+    <mesh ref={meshRef} material={mat}>
+      <sphereGeometry args={[1, 96, 64]} />
+    </mesh>
+  );
+}
+
+function EarthBody(props: PlanetProps) {
+  const gl = useThree((s) => s.gl);
+  const tex = useLoader(THREE.TextureLoader, EARTH_TEX);
+  useMemo(() => {
+    const aniso = Math.min(8, gl.capabilities.getMaxAnisotropy());
+    tex.forEach((t, i) => {
+      t.anisotropy = aniso;
+      t.wrapS = THREE.RepeatWrapping;
+      t.colorSpace = i < 2 ? THREE.SRGBColorSpace : THREE.NoColorSpace;
+      t.needsUpdate = true;
+    });
+  }, [gl, tex]);
+  return <PlanetBody {...props} textures={tex} />;
+}
+
+function BodyView({ res, index, slots, starIdx }: { res: SceneResult; index: number; slots: Slots<THREE.Group>; starIdx: number[] }) {
+  const b: SceneBody = res.bodies[index];
+  const F = res.times.length;
+  const group = useRef<THREE.Group | null>(null);
+  const mesh = useRef<THREE.Mesh | null>(null);
+  const halo = useRef<THREE.Sprite>(null);
+  const pos = useMemo(() => new THREE.Vector3(), []);
+  const ahead = useMemo(() => new THREE.Vector3(), []);
+  const minAngular = POINTLIKE.has(b.kind) || b.kind === "ship" ? 0.006 : 0.003;
+
+  const starColor = useMemo(() => {
+    const T = b.temperature?.find((x) => x != null) ?? 5778;
+    return kelvinToColor(T).lerp(new THREE.Color(b.color ?? "#ffffff"), b.color ? 0.25 : 0);
+  }, [b]);
+  const starMat = useMemo(
+    () => (b.kind === "star" ? new THREE.ShaderMaterial({ uniforms: { uColor: { value: starColor }, uTime: { value: 0 } }, vertexShader: STAR_VERT, fragmentShader: STAR_FRAG }) : null),
+    [b.kind, starColor],
+  );
+  const haloMat = useMemo(() => {
+    const base = { blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, toneMapped: false } as const;
+    if (b.kind === "star") return new THREE.SpriteMaterial({ ...base, map: glowTexture(), color: starColor.clone().multiplyScalar(1.6) });
+    if (b.kind === "blackhole") return new THREE.SpriteMaterial({ ...base, map: ringTexture(), color: new THREE.Color(3, 1.4, 0.5) });
+    if (b.kind === "light") return new THREE.SpriteMaterial({ ...base, map: glowTexture(), color: new THREE.Color(b.color ?? "#fff6d8").multiplyScalar(3) });
+    if (b.kind === "particle") return new THREE.SpriteMaterial({ ...base, map: glowTexture(), color: new THREE.Color(b.color ?? KIND_COLOR.particle).multiplyScalar(2) });
+    if (b.kind === "ship") return new THREE.SpriteMaterial({ ...base, map: glowTexture(), color: new THREE.Color(0.6, 1.2, 3) });
+    return null;
+  }, [b.kind, b.color, starColor]);
+  const haloMul = b.kind === "star" ? 5 : b.kind === "blackhole" ? 3.2 : b.kind === "ship" ? 1.2 : 4;
+
+  useEffect(
+    () => () => {
+      starMat?.dispose();
+      haloMat?.dispose();
+    },
+    [starMat, haloMat],
+  );
+
+  useFrame((state) => {
+    const g = group.current;
+    if (!g) return;
+    const { i, j, t } = cursor(F, usePlayer.getState().playhead);
+    if (!sampleVec(b.positions, i, j, t, pos)) {
+      g.visible = false;
+      return;
+    }
+    g.visible = true;
+    g.position.copy(pos);
+    const r = sampleNum(b.radius, i, j, t, 0);
+    const s = Math.max(r, state.camera.position.distanceTo(pos) * minAngular);
+    const sx = sampleComp(b.scale, i, j, t, 0, 1);
+    const sy = sampleComp(b.scale, i, j, t, 1, 1);
+    const sz = sampleComp(b.scale, i, j, t, 2, 1);
+    if (mesh.current) {
+      mesh.current.scale.set(s * sx, s * sz, s * sy);
+      const now = res.times[i] + (res.times[j] - res.times[i]) * t;
+      mesh.current.rotation.y = b.spin * now;
+    }
+    if (starMat) starMat.uniforms.uTime.value = state.clock.elapsedTime;
+    if (halo.current) halo.current.scale.setScalar(s * haloMul);
+    if (b.kind === "ship" && sampleVec(b.positions, j, Math.min(j + 1, F - 1), 0, ahead) && ahead.distanceToSquared(pos) > 0) g.lookAt(ahead);
+  });
+
+  const surfaceProps: PlanetProps = { res, index, slots, starIdx, meshRef: mesh };
+
+  return (
+    <group
+      ref={(g) => {
+        group.current = g;
+        slots.current[index] = g;
+      }}
+      onClick={(e) => {
+        if (e.delta > 6) return;
+        e.stopPropagation();
+        usePlayer.getState().setFocus(index);
+      }}
+    >
+      {b.kind === "star" && starMat && (
+        <mesh ref={mesh} material={starMat}>
+          <sphereGeometry args={[1, 64, 64]} />
+        </mesh>
+      )}
+      {b.kind === "blackhole" && (
+        <mesh ref={mesh}>
+          <sphereGeometry args={[1, 48, 48]} />
+          <meshBasicMaterial color="#000000" />
+        </mesh>
+      )}
+      {b.kind === "ship" && (
+        <mesh ref={mesh} rotation={[Math.PI / 2, 0, 0]}>
+          <coneGeometry args={[0.35, 1.6, 16]} />
+          <meshBasicMaterial color={b.color ?? KIND_COLOR.ship} />
+        </mesh>
+      )}
+      {b.kind === "earth" && (
+        <Suspense fallback={<PlanetBody {...surfaceProps} textures={null} />}>
+          <EarthBody {...surfaceProps} />
+        </Suspense>
+      )}
+      {SURFACE_KINDS.has(b.kind) && b.kind !== "earth" && <PlanetBody {...surfaceProps} textures={null} />}
+      {haloMat && <sprite ref={halo} material={haloMat} />}
+    </group>
+  );
+}
+
+// ---------- clouds and curves ----------
+function CloudView({ res, cloud, slot, geoms }: { res: SceneResult; cloud: SceneCloud; slot: number; geoms: Slots<THREE.BufferGeometry> }) {
+  const F = res.times.length;
+  const N = cloud.points[0]?.length ?? 0;
+  const { points, geo, mat } = useMemo(() => {
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(N * 3), 3));
+    const mat = new THREE.PointsMaterial({
+      map: glowTexture(),
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      toneMapped: false,
+      sizeAttenuation: true,
+      color: new THREE.Color(cloud.color ?? "#ffb070"),
+    });
+    const points = new THREE.Points(geo, mat);
+    points.frustumCulled = false;
+    return { points, geo, mat };
+  }, [N, cloud.color]);
+  useEffect(() => {
+    geoms.current[slot] = geo;
+    return () => {
+      geoms.current[slot] = null;
+      geo.dispose();
+      mat.dispose();
+    };
+  }, [geo, mat, geoms, slot]);
+  const base = useMemo(() => new THREE.Color(cloud.color ?? "#ffb070"), [cloud.color]);
+
+  useFrame((state) => {
+    const { i, j, t } = cursor(F, usePlayer.getState().playhead);
+    const arr = geo.attributes.position.array as Float32Array;
+    const A = cloud.points[i];
+    const B = cloud.points[j];
+    for (let k = 0; k < N; k++) {
+      const a = A[k];
+      const b = B?.[k];
+      const ax = a?.[0], ay = a?.[1], az = a?.[2];
+      if (ax == null || ay == null || az == null) {
+        arr[k * 3] = arr[k * 3 + 1] = arr[k * 3 + 2] = NaN;
+        continue;
+      }
+      let x = ax, y = ay, z = az;
+      const bx = b?.[0], by = b?.[1], bz = b?.[2];
+      if (t > 0 && bx != null && by != null && bz != null) {
+        x += (bx - x) * t;
+        y += (by - y) * t;
+        z += (bz - z) * t;
+      }
+      arr[k * 3] = x;
+      arr[k * 3 + 1] = z;
+      arr[k * 3 + 2] = -y;
+    }
+    geo.attributes.position.needsUpdate = true;
+    const T = sampleNum(cloud.temperature, i, j, t, NaN);
+    if (Number.isFinite(T)) {
+      const glow = T > 800 ? 1 + Math.min(3, (T - 800) / 1200) : 0.7;
+      mat.color.copy(kelvinToColor(Math.max(1000, T))).multiplyScalar(glow);
+    } else mat.color.copy(base);
+    const controls = state.controls as unknown as Controls | null;
+    const d = controls ? state.camera.position.distanceTo(controls.target) : state.camera.position.length();
+    mat.size = cloud.size * d * 0.012;
+  });
+
+  return <primitive object={points} />;
+}
+
+function CurveView({ res, curve }: { res: SceneResult; curve: SceneCurve }) {
+  const F = res.times.length;
+  const P = curve.static ? (curve.points as Num[][]).length : ((curve.points as Num[][][])[0]?.length ?? 0);
+  const { line, geo, mat } = useMemo(() => {
+    const geo = new THREE.BufferGeometry();
+    const arr = new Float32Array(P * 3);
+    if (curve.static) {
+      (curve.points as Num[][]).forEach((p, k) => {
+        arr[k * 3] = p[0] ?? NaN;
+        arr[k * 3 + 1] = p[2] ?? NaN;
+        arr[k * 3 + 2] = p[1] == null ? NaN : -p[1];
+      });
+    }
+    geo.setAttribute("position", new THREE.BufferAttribute(arr, 3));
+    const mat = new THREE.LineBasicMaterial({ color: new THREE.Color(curve.color ?? "#7dd3fc").multiplyScalar(1.4), transparent: true, opacity: 0.9, toneMapped: false });
+    const line = new THREE.Line(geo, mat);
+    line.frustumCulled = false;
+    return { line, geo, mat };
+  }, [P, curve]);
+  useEffect(
+    () => () => {
+      geo.dispose();
+      mat.dispose();
+    },
+    [geo, mat],
+  );
+  useFrame(() => {
+    if (curve.static) return;
+    const { i, j, t } = cursor(F, usePlayer.getState().playhead);
+    const pts = curve.points as Num[][][];
+    const arr = geo.attributes.position.array as Float32Array;
+    for (let k = 0; k < P; k++) {
+      const a = pts[i]?.[k];
+      const b = pts[j]?.[k];
+      const ax = a?.[0], ay = a?.[1], az = a?.[2];
+      if (ax == null || ay == null || az == null) {
+        arr[k * 3] = arr[k * 3 + 1] = arr[k * 3 + 2] = NaN;
+        continue;
+      }
+      let x = ax, y = ay, z = az;
+      const bx = b?.[0], by = b?.[1], bz = b?.[2];
+      if (t > 0 && bx != null && by != null && bz != null) {
+        x += (bx - x) * t;
+        y += (by - y) * t;
+        z += (bz - z) * t;
+      }
+      arr[k * 3] = x;
+      arr[k * 3 + 1] = z;
+      arr[k * 3 + 2] = -y;
+    }
+    geo.attributes.position.needsUpdate = true;
+  });
+  return <primitive object={line} />;
+}
+
+// ---------- camera: frames the focus body (or everything) and the debris around it ----------
+function SceneCamera({ res, slots, geoms }: { res: SceneResult; slots: Slots<THREE.Group>; geoms: Slots<THREE.BufferGeometry> }) {
+  const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera;
+  const controls = useThree((s) => s.controls) as unknown as Controls | null;
+  const F = res.times.length;
+  const interacting = useRef(false);
+  const started = useRef(false);
+  const lastZoom = useRef(usePlayer.getState().zoom);
+  const target = useMemo(() => new THREE.Vector3(), []);
+  const tmp = useMemo(() => new THREE.Vector3(), []);
+  const before = useMemo(() => new THREE.Vector3(), []);
+  const autoFocus = res.camera.focus ? res.bodies.findIndex((b) => b.name === res.camera.focus) : -1;
+  const viewDir = useMemo(() => {
+    const v = res.camera.view === "top" ? new THREE.Vector3(0.001, 1, 0.08) : res.camera.view === "side" ? new THREE.Vector3(0, 0.12, 1) : new THREE.Vector3(0.55, 0.45, 1);
+    return v.normalize();
+  }, [res.camera.view]);
+
+  useEffect(() => {
+    if (!controls) return;
+    const on = () => (interacting.current = true);
+    const off = () => (interacting.current = false);
+    controls.addEventListener("start", on);
+    controls.addEventListener("end", off);
+    return () => {
+      controls.removeEventListener("start", on);
+      controls.removeEventListener("end", off);
+    };
+  }, [controls]);
+
+  useFrame((_, delta) => {
+    if (!controls) return;
+    const s = usePlayer.getState();
+    const { i, j, t } = cursor(F, s.playhead);
+
+    if (s.zoom !== lastZoom.current) {
+      if (!s.follow) {
+        tmp.copy(camera.position).sub(controls.target).multiplyScalar(s.zoom / lastZoom.current);
+        camera.position.copy(controls.target).add(tmp);
+      }
+      lastZoom.current = s.zoom;
+    }
+
+    if (s.follow || !started.current) {
+      const fi = s.focus ?? autoFocus;
+      const fg = fi >= 0 ? slots.current[fi] : null;
+      const locked = !!fg && fg.visible;
+      if (locked) target.copy(fg!.position);
+      else {
+        let n = 0;
+        target.set(0, 0, 0);
+        slots.current.forEach((g) => {
+          if (g && g.visible) {
+            target.add(g.position);
+            n++;
+          }
+        });
+        if (n) target.divideScalar(n);
+      }
+
+      let r = 0;
+      slots.current.forEach((g, k) => {
+        if (!g || !g.visible) return;
+        r = Math.max(r, g.position.distanceTo(target) + sampleNum(res.bodies[k]?.radius, i, j, t, 0) * 1.3);
+      });
+      for (const geo of geoms.current) {
+        if (!geo) continue;
+        const arr = geo.attributes.position.array as Float32Array;
+        const n = arr.length / 3;
+        const d = new Float32Array(n);
+        let m = 0;
+        for (let k = 0; k < n; k++) {
+          const x = arr[k * 3] - target.x, y = arr[k * 3 + 1] - target.y, z = arr[k * 3 + 2] - target.z;
+          const dd = Math.sqrt(x * x + y * y + z * z);
+          if (Number.isFinite(dd)) d[m++] = dd;
+        }
+        if (m) {
+          const sorted = d.subarray(0, m).sort();
+          r = Math.max(r, sorted[Math.floor(m * 0.85)]);
+        }
+      }
+      if (locked && fi >= 0) {
+        const fr = sampleNum(res.bodies[fi].radius, i, j, t, 0);
+        if (fr > 0) r = Math.min(Math.max(r, fr * 2.5), fr * 60);
+      }
+      if (!(r > 0)) r = 1;
+      const want = r * 2.4 * s.zoom;
+
+      if (!started.current) {
+        controls.target.copy(target);
+        camera.position.copy(target).addScaledVector(viewDir, want);
+        started.current = true;
+      } else {
+        const k = 1 - Math.exp(-Math.min(delta, 0.1) * 2.5);
+        before.copy(controls.target);
+        controls.target.lerp(target, locked ? Math.max(k, 0.5) : k);
+        camera.position.add(tmp.subVectors(controls.target, before));
+        if (!interacting.current) {
+          tmp.copy(camera.position).sub(controls.target);
+          const cur = tmp.length() || 1;
+          tmp.multiplyScalar((cur + (want - cur) * k) / cur);
+          camera.position.copy(controls.target).add(tmp);
+        }
+      }
+    }
+    const d = camera.position.distanceTo(controls.target);
+    camera.near = Math.max(d / 2000, 1e-12);
+    camera.far = d * 2000;
+    camera.updateProjectionMatrix();
+  });
+  return null;
+}
+
+function Labels({ res, groups, tags }: { res: SceneResult; groups: Slots<THREE.Group>; tags: Slots<HTMLSpanElement> }) {
+  const v = useMemo(() => new THREE.Vector3(), []);
+  useFrame(({ camera, size }) => {
+    camera.updateMatrixWorld();
+    for (let k = 0; k < tags.current.length; k++) {
+      const el = tags.current[k];
+      if (!el) continue;
+      const g = groups.current[k];
+      if (!g || !g.visible) {
+        el.style.display = "none";
+        continue;
+      }
+      v.copy(g.position).project(camera);
+      if (v.z > 1 || Math.abs(v.x) > 1.1 || Math.abs(v.y) > 1.1) {
+        el.style.display = "none";
+        continue;
+      }
+      el.style.display = "block";
+      el.style.transform = `translate(${((v.x * 0.5 + 0.5) * size.width).toFixed(1)}px, ${((-v.y * 0.5 + 0.5) * size.height).toFixed(1)}px) translate(-50%, -160%)`;
+    }
+  });
+  return null;
+}
+
+// ---------- DOM overlays ----------
+function CaptionBar({ res }: { res: SceneResult }) {
+  const playhead = usePlayer((s) => s.playhead);
+  const now = sceneTime(res, playhead);
+  let cap: { t: number; text: string } | null = null;
+  for (const c of res.captions) if (c.t <= now + 1e-12 * Math.max(1, Math.abs(now))) cap = c;
+  if (!cap) return null;
+  return (
+    <div style={{ position: "absolute", left: "50%", bottom: 24, transform: "translateX(-50%)", maxWidth: "78%" }}>
+      <div key={cap.text} className="rounded-lg border border-white/10 bg-black/65 px-4 py-2 text-center text-[15px] font-medium leading-snug text-white backdrop-blur">
+        {cap.text}
+      </div>
+    </div>
+  );
+}
+
+function Spark({ s, i }: { s: SceneResult["series"][number]; i: number }) {
+  const { path, cx, cy } = useMemo(() => {
+    const vals = s.values.map((v) => (v == null || !Number.isFinite(v) ? null : v));
+    const fin = vals.filter((v): v is number => v != null);
+    const pos = fin.length > 0 && fin.every((v) => v > 0);
+    const lo = Math.min(...fin), hi = Math.max(...fin);
+    const useLog = pos && hi / lo > 1e3;
+    const tr = (v: number) => (useLog ? Math.log10(v) : v);
+    const a = fin.length ? tr(lo) : 0, b = fin.length ? tr(hi) : 1;
+    const span = b - a || 1;
+    const n = vals.length;
+    const X = (k: number) => (n > 1 ? (k / (n - 1)) * 196 + 2 : 100);
+    const Y = (v: number) => 36 - ((tr(v) - a) / span) * 32;
+    let d = "";
+    vals.forEach((v, k) => {
+      if (v == null) return;
+      d += `${d ? "L" : "M"}${X(k).toFixed(1)},${Y(v).toFixed(1)}`;
+    });
+    const cur = vals[i];
+    return { path: d, cx: X(i), cy: cur == null ? null : Y(cur) };
+  }, [s, i]);
+  const v = s.values[i];
+  return (
+    <div className="rounded-md border border-white/10 bg-black/55 px-2.5 py-1.5 backdrop-blur">
+      <div className="flex justify-between gap-2 text-[10px] text-zinc-400">
+        <span className="truncate">{s.name}</span>
+        <span className="shrink-0 font-mono text-zinc-100">
+          {fmt(v)} {s.unit}
+        </span>
+      </div>
+      <svg viewBox="0 0 200 40" className="mt-1 h-8 w-full">
+        <path d={path} fill="none" stroke="rgb(252 211 77 / 0.8)" strokeWidth="1.5" />
+        {cy != null && <circle cx={cx} cy={cy} r="3" fill="#fde68a" />}
+      </svg>
+    </div>
+  );
+}
+
+function SeriesPanel({ res }: { res: SceneResult }) {
+  const playhead = usePlayer((s) => s.playhead);
+  if (!res.series.length) return null;
+  const { i } = cursor(res.times.length, Math.round(playhead));
+  return (
+    <div style={{ position: "absolute", right: 12, top: 12, width: 230, display: "flex", flexDirection: "column", gap: 8 }}>
+      {res.series.slice(0, 4).map((s) => (
+        <Spark key={s.name} s={s} i={i} />
+      ))}
+    </div>
+  );
+}
+
+function ViewChips({ res }: { res: SceneResult }) {
+  const focus = usePlayer((s) => s.focus);
+  const setFocus = usePlayer((s) => s.setFocus);
+  const items = [{ id: null as number | null, name: "All" }, ...res.bodies.map((b, k) => ({ id: k as number | null, name: b.name, kind: b.kind })).filter((x) => !("kind" in x) || !POINTLIKE.has(x.kind as string)).slice(0, MAX_LABELS)];
+  return (
+    <div style={{ position: "absolute", left: 12, top: 12, display: "flex", flexWrap: "wrap", gap: 6, maxWidth: "60%" }}>
+      {items.map((it) => (
+        <button
+          key={it.id ?? "all"}
+          onClick={() => setFocus(it.id)}
+          className={`rounded-md border px-2.5 py-1 text-[11px] backdrop-blur ${focus === it.id ? "border-white/40 bg-white/15 text-white" : "border-white/10 bg-black/40 text-white/60 hover:text-white"}`}
+        >
+          {it.name}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export default function SceneView({ res }: { res: SceneResult }) {
+  const follow = usePlayer((s) => s.follow);
+  const groups = useRef<(THREE.Group | null)[]>([]);
+  const geoms = useRef<(THREE.BufferGeometry | null)[]>([]);
+  const tags = useRef<(HTMLSpanElement | null)[]>([]);
+  const starIdx = useMemo(() => res.bodies.map((b, k) => (b.kind === "star" ? k : -1)).filter((k) => k >= 0), [res]);
+  const labelled = res.bodies.map((b, k) => ({ b, k })).filter(({ b }) => !POINTLIKE.has(b.kind)).slice(0, MAX_LABELS);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+      const s = usePlayer.getState();
+      if (e.key === "=" || e.key === "+") s.zoomBy(1 / 1.5);
+      else if (e.key === "-" || e.key === "_") s.zoomBy(1.5);
+      else if (e.key === "f" || e.key === "F" || e.key === "0" || e.key === "Escape") s.fit();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  return (
+    <div style={{ position: "absolute", inset: 0 }}>
+      <Canvas camera={{ position: [0, 1, 3], fov: 50, near: 0.001, far: 1e6 }} dpr={[1, 1.5]} gl={{ antialias: false, powerPreference: "high-performance" }}>
+        <Sky />
+        <Player F={res.times.length} />
+        {res.bodies.map((b, k) => (
+          <BodyView key={`${k}-${b.name}`} res={res} index={k} slots={groups} starIdx={starIdx} />
+        ))}
+        {res.clouds.map((c, k) => (
+          <CloudView key={`c${k}`} res={res} cloud={c} slot={k} geoms={geoms} />
+        ))}
+        {res.curves.map((c, k) => (
+          <CurveView key={`l${k}`} res={res} curve={c} />
+        ))}
+        <OrbitControls makeDefault enableDamping enableZoom={!follow} />
+        <SceneCamera res={res} slots={groups} geoms={geoms} />
+        <ZoomInput />
+        <Labels res={res} groups={groups} tags={tags} />
+        <EffectComposer multisampling={0}>
+          <Bloom mipmapBlur luminanceThreshold={1} intensity={1.6} radius={0.75} />
+          <Vignette eskil={false} offset={0.25} darkness={0.7} />
+          <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+        </EffectComposer>
+      </Canvas>
+
+      <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none" }}>
+        {labelled.map(({ b, k }) => (
+          <span
+            key={k}
+            ref={(el) => {
+              tags.current[k] = el;
+            }}
+            style={{ position: "absolute", left: 0, top: 0, display: "none" }}
+            className="select-none whitespace-nowrap text-[11px] font-medium text-white/75 [text-shadow:0_0_6px_rgba(0,0,0,0.9)]"
+          >
+            {b.name}
+          </span>
+        ))}
+      </div>
+      <ViewChips res={res} />
+      <SeriesPanel res={res} />
+      <CaptionBar res={res} />
+      <ZoomButtons />
+    </div>
+  );
+}
