@@ -56,7 +56,15 @@ export interface NoSimResult {
 
 export type EngineResult = GravityResult | NoSimResult;
 
+export interface AskMeta {
+  model: string;
+  attempts: number;
+  input_tokens: number;
+  output_tokens: number;
+}
+
 export interface SimResponse {
   spec: ScenarioSpec;
   result: EngineResult;
+  meta?: AskMeta;
 }
