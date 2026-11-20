@@ -36,6 +36,17 @@ s.number(name, value, unit, note): 2 to 6 headline results.
 s.check(name, value, expected, rtol=1e-6, atol=0.0): AT LEAST 2 honest checks of a computed result against something independent, such as a conservation law, an analytic formula, a known limit or a published value. Never check a value against itself. Failed checks are sent back to you to fix the PHYSICS, never loosen a check to pass.
 s.camera(focus=body_name_or_None, view="free"|"top"|"side").
 
+## Tested physics helpers (prefer these whenever they fit: they are benchmarked against textbook results)
+Relativity: wie.cruise(distance_m, v) -> gamma, t_earth_s, t_ship_s, distance_ship_frame_m, kinetic_energy_per_kg_J.
+  wie.rocket(distance_m, accel=wie.g0, flip=True, n=200) -> tau_total_s, t_total_s, v_max, gamma_max, and arrays tau_s, t_s, x_m, v, gamma (sampled in ship time).
+  wie.doppler_factor(v, theta_obs) (frequency ratio, 0 = straight ahead), wie.aberration(theta_rest, v).
+Cosmology: wie.hubble(a, h0, omega_m, omega_r, omega_de, w0, wa) in km/s/Mpc.
+  wie.friedmann(h0=67.4, omega_m=0.315, omega_r=9e-5, omega_de=0.685, w0=-1, wa=0, t_future_gyr=100, n=300) -> age_gyr, fate ("expands forever", "big crunch", "big rip"), t_end_gyr, and arrays t_gyr (since the Big Bang), a, H_kms_mpc. wie.KM_S_MPC_PER_GYR converts H.
+Quantum: wie.gaussian_packet(x, x0, sigma, k0). wie.schrodinger_1d(x, psi0, V, t, mass=1, hbar_=1, absorb=0) -> psi with shape (F, N); split-step, any consistent units (defaults hbar = m = 1); V is an array or V(x, t). wie.double_slit_intensity(y, wavelength, slit_separation, slit_width, screen_distance).
+Black holes: wie.black_hole(mass_kg, spin=0) -> r_s_m, r_horizon_m, r_photon_sphere_m, shadow_radius_m, r_isco_m, hawking_temperature_K, evaporation_time_s, evaporation_time_years, max_time_horizon_to_singularity_s.
+  wie.infall(mass_kg, r0_m, n=300) -> exact radial geodesic: arrays tau_s, t_s (distant clock, NaN inside the horizon), r_m, v_local, plus tau_to_horizon_s and tau_to_singularity_s. wie.tidal_acceleration(mass_kg, r_m, length_m=2).
+Your self checks may compare your scene's own numbers against these helpers or their textbook formulas, but must still test something independent.
+
 ## Make it look like the question
 Show the thing being asked about, at a scale where the effect is visible: the planet tearing apart, the ship crossing the light years, the star swelling. Debris belongs in clouds, deformation in scale, heat in temperature, waves and light paths in curves. Keep the main objects within a few orders of magnitude of each other in size, or the camera cannot frame them. Focus the camera on the main object.
 

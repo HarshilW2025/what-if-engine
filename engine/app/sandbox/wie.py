@@ -258,3 +258,233 @@ class Scene:
             "checks": self._checks,
             "camera": self._camera,
         }
+
+
+# =====================================================================================
+# Tested physics helpers. Each one is benchmarked in tests/test_physics_helpers.py.
+# Models should prefer these over re-deriving the maths: they are faster and verified.
+# =====================================================================================
+
+KM_S_MPC_PER_GYR = 1e3 / (1e6 * pc) * (1e9 * year)  # 1 km/s/Mpc expressed in 1/Gyr
+
+
+# ---------- special relativity ----------
+def cruise(distance_m, v):
+    """Coasting trip at constant speed v (m/s). Returns times in seconds and the energy per kg."""
+    g = float(lorentz(v))
+    t_earth = distance_m / v
+    return {
+        "gamma": g,
+        "t_earth_s": t_earth,
+        "t_ship_s": t_earth / g,
+        "distance_ship_frame_m": distance_m / g,
+        "kinetic_energy_per_kg_J": (g - 1.0) * c**2,
+    }
+
+
+def rocket(distance_m, accel=g0, flip=True, n=200):
+    """Constant proper acceleration trip (hyperbolic motion). flip=True accelerates for the first half
+    and decelerates for the second, arriving at rest. Returns totals plus arrays sampled in ship (proper) time:
+    tau_s, t_s (Earth time), x_m (distance covered), v (m/s), gamma."""
+    a = float(accel)
+    half = distance_m / 2.0 if flip else distance_m
+    tau_leg = c / a * np.arccosh(1.0 + a * half / c**2)
+    tau_total = 2 * tau_leg if flip else tau_leg
+    tau = np.linspace(0.0, tau_total, int(n))
+    s = np.minimum(tau, tau_total - tau) if flip else tau  # proper time from the nearest standstill
+    x_leg = c**2 / a * (np.cosh(a * s / c) - 1.0)
+    t_leg = c / a * np.sinh(a * s / c)
+    t_half = c / a * np.sinh(a * tau_leg / c)
+    if flip:
+        second = tau > tau_leg
+        x = np.where(second, distance_m - x_leg, x_leg)
+        t = np.where(second, 2 * t_half - t_leg, t_leg)
+    else:
+        x, t = x_leg, t_leg
+    v = c * np.tanh(a * s / c)
+    return {
+        "tau_total_s": float(tau_total),
+        "t_total_s": float(2 * t_half if flip else t_half),
+        "v_max": float(c * np.tanh(a * tau_leg / c)),
+        "gamma_max": float(np.cosh(a * tau_leg / c)),
+        "tau_s": tau, "t_s": t, "x_m": x, "v": v, "gamma": np.cosh(a * s / c),
+    }
+
+
+def doppler_factor(v, theta_obs):
+    """Frequency ratio f_seen / f_emitted for a moving observer looking at a source at angle theta_obs
+    (radians, in the observer's frame, 0 = straight ahead)."""
+    b = np.asarray(v, dtype=float) / c
+    return 1.0 / (lorentz(v) * (1.0 - b * np.cos(theta_obs)))
+
+
+def aberration(theta_rest, v):
+    """Apparent angle (observer frame) of light that arrives at angle theta_rest in the rest frame."""
+    b = float(v) / c
+    ct = np.cos(theta_rest)
+    return np.arccos((ct + b) / (1.0 + b * ct))
+
+
+# ---------- cosmology ----------
+def _de_density(a, w0, wa):
+    return a ** (-3.0 * (1.0 + w0 + wa)) * np.exp(-3.0 * wa * (1.0 - a))
+
+
+def hubble(a, h0=67.4, omega_m=0.315, omega_r=9e-5, omega_de=0.685, w0=-1.0, wa=0.0):
+    """H(a) in km/s/Mpc for a CPL dark energy universe (curvature fills the gap to 1)."""
+    a = np.asarray(a, dtype=float)
+    ok = 1.0 - omega_m - omega_r - omega_de
+    e2 = omega_r * a**-4 + omega_m * a**-3 + ok * a**-2 + omega_de * _de_density(a, w0, wa)
+    return h0 * np.sqrt(np.maximum(e2, 0.0))
+
+
+def friedmann(h0=67.4, omega_m=0.315, omega_r=9e-5, omega_de=0.685, w0=-1.0, wa=0.0, t_future_gyr=100.0, n=300):
+    """Expansion history and fate. Integrates the acceleration equation from today (a = 1) forward,
+    and gets the age by integrating back to the Big Bang. Returns age_gyr, fate ('expands forever',
+    'big crunch', 'big rip'), t_end_gyr (time since the Big Bang of a crunch or rip, else None),
+    and arrays t_gyr (since the Big Bang), a, H_kms_mpc, from a = 0.001 to the end."""
+    from scipy.integrate import quad, solve_ivp
+
+    H0 = h0 * KM_S_MPC_PER_GYR
+    ok = 1.0 - omega_m - omega_r - omega_de
+
+    def E2(a):
+        return omega_r * a**-4 + omega_m * a**-3 + ok * a**-2 + omega_de * _de_density(a, w0, wa)
+
+    def addot(t, y):
+        a, ad = y
+        w = w0 + wa * (1.0 - a)
+        acc = -0.5 * H0**2 * a * (2 * omega_r * a**-4 + omega_m * a**-3 + omega_de * _de_density(a, w0, wa) * (1 + 3 * w))
+        return [ad, acc]
+
+    age = quad(lambda a: 1.0 / (a * H0 * np.sqrt(E2(a))), 0.0, 1.0, limit=200)[0]
+    t_past = age - quad(lambda a: 1.0 / (a * H0 * np.sqrt(E2(a))), 0.0, 1e-3, limit=200)[0]
+
+    crunch = lambda t, y: y[0] - 1e-3
+    crunch.terminal, crunch.direction = True, -1
+    rip = lambda t, y: y[0] - 1e8
+    rip.terminal, rip.direction = True, 1
+    fwd = solve_ivp(addot, (0.0, t_future_gyr), [1.0, H0], events=[crunch, rip], rtol=1e-10, atol=1e-12, dense_output=True)
+    fate, t_end = "expands forever", None
+    if fwd.t_events[0].size:
+        fate, t_end = "big crunch", age + float(fwd.t_events[0][0])
+    elif fwd.t_events[1].size:
+        fate, t_end = "big rip", age + float(fwd.t_events[1][0])
+
+    back = solve_ivp(addot, (0.0, -t_past), [1.0, H0], rtol=1e-10, atol=1e-12, dense_output=True)
+    t_rel = np.linspace(-t_past, fwd.t[-1], int(n))
+    a_arr = np.where(t_rel < 0, back.sol(np.minimum(t_rel, 0.0))[0], fwd.sol(np.maximum(t_rel, 0.0))[0])
+    ad_arr = np.where(t_rel < 0, back.sol(np.minimum(t_rel, 0.0))[1], fwd.sol(np.maximum(t_rel, 0.0))[1])
+    return {
+        "age_gyr": float(age), "fate": fate, "t_end_gyr": t_end,
+        "t_gyr": t_rel + age, "a": a_arr, "H_kms_mpc": ad_arr / a_arr / KM_S_MPC_PER_GYR,
+    }
+
+
+# ---------- quantum mechanics ----------
+def gaussian_packet(x, x0, sigma, k0):
+    """Normalised Gaussian wave packet centred at x0 with width sigma and mean wavenumber k0."""
+    x = np.asarray(x, dtype=float)
+    psi = np.exp(-((x - x0) ** 2) / (4 * sigma**2) + 1j * k0 * x)
+    return psi / np.sqrt(np.trapezoid(np.abs(psi) ** 2, x))
+
+
+def schrodinger_1d(x, psi0, V, t, mass=1.0, hbar_=1.0, absorb=0.0, max_steps=40000):
+    """Split-step Fourier solution of the 1D Schrodinger equation (any consistent units; default hbar = m = 1).
+    x uniform grid, psi0 complex (N,), V real (N,) or callable V(x, t), t output times (F,).
+    absorb: fraction of the grid at each edge with a soft absorbing mask (0 = periodic box).
+    Returns psi with shape (F, N)."""
+    x = np.asarray(x, dtype=float)
+    t = np.asarray(t, dtype=float)
+    N = x.size
+    dx = x[1] - x[0]
+    k = 2 * np.pi * np.fft.fftfreq(N, dx)
+    dt_max = 0.1 * mass * dx**2 / hbar_
+    total = int(np.sum(np.ceil(np.diff(t) / dt_max)))
+    if total > max_steps:
+        raise ValueError(f"schrodinger_1d would need {total} steps; use fewer grid points, a wider dx or a shorter time span")
+    mask = np.ones(N)
+    if absorb > 0:
+        m = int(absorb * N)
+        edge = np.cos(np.linspace(0, np.pi / 2, m)) ** 0.125
+        mask[:m] = edge[::-1]
+        mask[-m:] = edge
+    psi = np.asarray(psi0, dtype=complex).copy()
+    out = np.empty((t.size, N), dtype=complex)
+    out[0] = psi
+    for i in range(1, t.size):
+        steps = max(1, int(np.ceil((t[i] - t[i - 1]) / dt_max)))
+        dt = (t[i] - t[i - 1]) / steps
+        kin = np.exp(-1j * hbar_ * k**2 * dt / (2 * mass))
+        for s in range(steps):
+            tt = t[i - 1] + s * dt
+            Vx = V(x, tt) if callable(V) else V
+            half = np.exp(-1j * np.asarray(Vx, dtype=float) * dt / (2 * hbar_))
+            psi = half * np.fft.ifft(kin * np.fft.fft(half * psi))
+            if absorb > 0:
+                psi *= mask
+        out[i] = psi
+    return out
+
+
+def double_slit_intensity(y, wavelength, slit_separation, slit_width, screen_distance):
+    """Fraunhofer two-slit pattern on a screen, normalised to 1 at the centre."""
+    s = np.asarray(y, dtype=float) / np.sqrt(np.asarray(y, dtype=float) ** 2 + screen_distance**2)
+    beta = np.pi * slit_width * s / wavelength
+    return np.cos(np.pi * slit_separation * s / wavelength) ** 2 * np.sinc(beta / np.pi) ** 2
+
+
+# ---------- black holes ----------
+def black_hole(mass_kg, spin=0.0):
+    """Key numbers for a black hole of mass_kg and dimensionless spin (0 to 0.998).
+    Radii in m, temperature in K, times in s (and years where noted)."""
+    M = float(mass_kg)
+    rg = G * M / c**2
+    a = float(spin)
+    z1 = 1 + (1 - a * a) ** (1 / 3) * ((1 + a) ** (1 / 3) + (1 - a) ** (1 / 3))
+    z2 = np.sqrt(3 * a * a + z1 * z1)
+    isco = rg * (3 + z2 - np.sqrt((3 - z1) * (3 + z1 + 2 * z2)))
+    t_evap = 5120 * np.pi * G**2 * M**3 / (hbar * c**4)
+    return {
+        "r_s_m": 2 * rg,
+        "r_horizon_m": rg * (1 + np.sqrt(1 - a * a)),
+        "r_photon_sphere_m": 3 * rg,
+        "shadow_radius_m": 3 * np.sqrt(3) * rg,
+        "r_isco_m": float(isco),
+        "hawking_temperature_K": hbar * c**3 / (8 * np.pi * G * M * k_B),
+        "evaporation_time_s": t_evap,
+        "evaporation_time_years": t_evap / year,
+        "max_time_horizon_to_singularity_s": np.pi * G * M / c**3,
+    }
+
+
+def tidal_acceleration(mass_kg, r_m, length_m=2.0):
+    """Head to toe stretching acceleration (m/s^2) across length_m at distance r_m (Newtonian, radial)."""
+    return 2 * G * mass_kg * length_m / np.asarray(r_m, dtype=float) ** 3
+
+
+def infall(mass_kg, r0_m, n=300):
+    """Radial fall from rest at r0 into a Schwarzschild black hole (exact geodesic, cycloid form).
+    Returns arrays sampled to the singularity: tau_s (faller's clock), t_s (distant clock; NaN once inside,
+    since it never sees the crossing), r_m, v_local (speed measured by a hovering observer, NaN inside),
+    plus tau_to_horizon_s and tau_to_singularity_s."""
+    M = G * mass_kg / c**2
+    rs = 2 * M
+    r0 = float(r0_m)
+    if r0 <= rs:
+        raise ValueError("r0 must be outside the horizon")
+    eta = np.linspace(0.0, np.pi, int(n))
+    r = 0.5 * r0 * (1 + np.cos(eta))
+    tau = np.sqrt(r0**3 / (8 * M)) * (eta + np.sin(eta)) / c
+    q = np.sqrt(r0 / rs - 1)
+    th = np.tan(eta / 2)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        tt = rs * (np.log(np.abs((q + th) / (q - th))) + q * (eta + r0 / (2 * rs) * (eta + np.sin(eta)))) / c
+        v = c * np.sqrt((rs / r - rs / r0) / (1 - rs / r0))
+    outside = r > rs
+    eta_h = 2 * np.arctan(q)
+    return {
+        "tau_s": tau, "t_s": np.where(outside, tt, np.nan), "r_m": r, "v_local": np.where(outside, v, np.nan),
+        "tau_to_horizon_s": float(np.sqrt(r0**3 / (8 * M)) * (eta_h + np.sin(eta_h)) / c),
+        "tau_to_singularity_s": float(np.pi * np.sqrt(r0**3 / (8 * M)) / c),
+    }
