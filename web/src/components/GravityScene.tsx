@@ -4,12 +4,13 @@ import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { Bloom, EffectComposer, ToneMapping, Vignette } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
-import { Suspense, useEffect, useMemo, useRef, type RefObject } from "react";
+import { Suspense, useEffect, useMemo, useRef, type ReactNode, type RefObject } from "react";
 import * as THREE from "three";
 import { frameDurations } from "@/lib/pacing";
 import { usePlayer } from "@/lib/store";
 import type { BodyInfo, GravityResult, MergeEvent, Vec3 } from "@/lib/types";
 import { BlackHoleVisual } from "./scene/blackHole";
+import { Ring, Safe, lookFor, type Look } from "./scene/looks";
 import { MAX_STARS, PLANET_FRAG, PLANET_VERT } from "./scene/planetShaders";
 import { SKY_FRAG, SKY_VERT, STAR_FRAG, STAR_VERT, TRAIL_FRAG, TRAIL_VERT } from "./scene/shaders";
 import { glowTexture, kelvinToColor, ringTexture, starTemperature } from "./scene/visuals";
@@ -26,7 +27,7 @@ type Controls = {
 type Slots<T> = { current: (T | null)[] };
 type Temps = { current: number[] };
 type StarRef = { id: number; lum: number; color: THREE.Color };
-type Kind = 0 | 1 | 2;
+type Kind = 0 | 1 | 2 | 3; // 3 = real imagery
 
 const isBlackHole = (b: BodyInfo) => /black\s*hole/i.test(b.name);
 const isStar = (b: BodyInfo) => b.mass_msun >= 0.08 && !isBlackHole(b);
@@ -295,8 +296,8 @@ type SurfaceProps = {
 };
 
 /** planet surface lit by the simulation's own stars; temperature is computed from their flux */
-function PlanetSurface({ info, kind, stars, slots, temps, meshRef, textures }: SurfaceProps & { textures: THREE.Texture[] | null }) {
-  const effKind: Kind = kind === 0 && !textures ? 1 : kind;
+function PlanetSurface({ info, kind, stars, slots, temps, meshRef, textures, children }: SurfaceProps & { textures: THREE.Texture[] | null; children?: ReactNode }) {
+  const effKind: Kind = (kind === 0 || kind === 3) && !textures ? 1 : kind;
   const mat = useMemo(
     () =>
       new THREE.ShaderMaterial({
@@ -372,6 +373,7 @@ function PlanetSurface({ info, kind, stars, slots, temps, meshRef, textures }: S
   return (
     <mesh ref={meshRef} material={mat}>
       <sphereGeometry args={[1, 96, 64]} />
+      {children}
     </mesh>
   );
 }
@@ -391,6 +393,28 @@ function EarthSurface(props: SurfaceProps) {
   return <PlanetSurface {...props} textures={tex} />;
 }
 
+/** a real body with its NASA-based map (and rings), falling back to the procedural surface */
+function MappedSurface({ look, ...props }: SurfaceProps & { look: Look }) {
+  const gl = useThree((s) => s.gl);
+  const tex = useLoader(THREE.TextureLoader, look.map);
+  useMemo(() => {
+    tex.anisotropy = Math.min(8, gl.capabilities.getMaxAnisotropy());
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.needsUpdate = true;
+  }, [gl, tex]);
+  return (
+    <PlanetSurface {...props} kind={3} textures={[tex]}>
+      {look.ring && (
+        <Safe fallback={null}>
+          <Suspense fallback={null}>
+            <Ring {...look.ring} />
+          </Suspense>
+        </Safe>
+      )}
+    </PlanetSurface>
+  );
+}
+
 function Body({ res, index, E0, slots, stars, temps }: { res: GravityResult; index: number; E0: number; slots: Slots<THREE.Group>; stars: StarRef[]; temps: Temps }) {
   const group = useRef<THREE.Group | null>(null);
   const sphere = useRef<THREE.Mesh | null>(null);
@@ -400,6 +424,7 @@ function Body({ res, index, E0, slots, stars, temps }: { res: GravityResult; ind
   const star = isStar(info);
   const bh = isBlackHole(info);
   const bhRef = useRef<THREE.Group | null>(null);
+  const look = star || bh ? null : lookFor(info.name);
   const kind = planetKind(info);
   const baseSize = baseSizeOf(info, E0);
   const minAngular = 0.012; // never smaller than this fraction of camera distance
@@ -545,6 +570,12 @@ function Body({ res, index, E0, slots, stars, temps }: { res: GravityResult; ind
           <Suspense fallback={<PlanetSurface {...surf} textures={null} />}>
             <EarthSurface {...surf} />
           </Suspense>
+        ) : look ? (
+          <Safe fallback={<PlanetSurface {...surf} textures={null} />}>
+            <Suspense fallback={<PlanetSurface {...surf} textures={null} />}>
+              <MappedSurface {...surf} look={look} />
+            </Suspense>
+          </Safe>
         ) : (
           <PlanetSurface {...surf} textures={null} />
         )}

@@ -4,13 +4,14 @@ import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { Bloom, EffectComposer, ToneMapping, Vignette } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
-import { Suspense, useEffect, useMemo, useRef, type RefObject } from "react";
+import { Suspense, useEffect, useMemo, useRef, type ReactNode, type RefObject } from "react";
 import * as THREE from "three";
 import { fmt } from "@/lib/fmt";
 import { usePlayer } from "@/lib/store";
 import type { Num, SceneBody, SceneCloud, SceneCurve, SceneResult } from "@/lib/types";
 import { ZoomButtons, ZoomInput } from "./GravityScene";
 import { BlackHoleVisual } from "./scene/blackHole";
+import { Ring, Safe, lookFor, type Look } from "./scene/looks";
 import { MAX_STARS, PLANET_FRAG, PLANET_VERT } from "./scene/planetShaders";
 import { SKY_FRAG, SKY_VERT, STAR_FRAG, STAR_VERT } from "./scene/shaders";
 import { glowTexture, kelvinToColor, ringTexture } from "./scene/visuals";
@@ -23,7 +24,6 @@ type Controls = {
 };
 
 const MAX_LABELS = 12;
-const DEFAULT_SUN = new THREE.Vector3(1, 0.35, 0.6).normalize();
 const EARTH_TEX = ["/textures/earth/day.jpg", "/textures/earth/night.jpg", "/textures/earth/data.jpg"];
 const KIND_COLOR: Record<string, string> = {
   planet: "#c79a6b", moon: "#a3a3a3", rock: "#8c7b6b", generic: "#9fb4c8", earth: "#3b6fb6",
@@ -133,10 +133,10 @@ function Sky() {
 // ---------- bodies ----------
 type PlanetProps = { res: SceneResult; index: number; slots: Slots<THREE.Group>; starIdx: number[]; meshRef: RefObject<THREE.Mesh | null> };
 
-function PlanetBody({ res, index, slots, starIdx, meshRef, textures }: PlanetProps & { textures: THREE.Texture[] | null }) {
+function PlanetBody({ res, index, slots, starIdx, meshRef, textures, children }: PlanetProps & { textures: THREE.Texture[] | null; children?: ReactNode }) {
   const b = res.bodies[index];
   const F = res.times.length;
-  const kind = b.kind === "earth" && textures ? 0 : 1;
+  const kind = textures ? (textures.length === 1 ? 3 : 0) : 1; // 0 Earth maps, 3 real imagery, 1 procedural
   const mat = useMemo(
     () =>
       new THREE.ShaderMaterial({
@@ -178,9 +178,12 @@ function PlanetBody({ res, index, slots, starIdx, meshRef, textures }: PlanetPro
       k++;
     }
     if (k === 0) {
-      u.uStarDir.value[0].copy(DEFAULT_SUN);
-      u.uStarCol.value[0].set(1, 0.97, 0.92);
-      u.uStarFlux.value[0] = 3;
+      // no star in the scene: soft light from the viewer's side, so no invisible Sun makes a day and night side
+      tmp.copy(state.camera.position).sub(self.position).normalize();
+      tmp.y += 0.25;
+      u.uStarDir.value[0].copy(tmp.normalize());
+      u.uStarCol.value[0].set(1, 1, 1);
+      u.uStarFlux.value[0] = 1.2;
       k = 1;
     }
     u.uStarCount.value = k;
@@ -193,6 +196,7 @@ function PlanetBody({ res, index, slots, starIdx, meshRef, textures }: PlanetPro
   return (
     <mesh ref={meshRef} material={mat}>
       <sphereGeometry args={[1, 96, 64]} />
+      {children}
     </mesh>
   );
 }
@@ -212,6 +216,28 @@ function EarthBody(props: PlanetProps) {
   return <PlanetBody {...props} textures={tex} />;
 }
 
+/** a real body with its NASA-based map (and rings), falling back to the procedural surface */
+function MappedBody({ look, ...props }: PlanetProps & { look: Look }) {
+  const gl = useThree((s) => s.gl);
+  const tex = useLoader(THREE.TextureLoader, look.map);
+  useMemo(() => {
+    tex.anisotropy = Math.min(8, gl.capabilities.getMaxAnisotropy());
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.needsUpdate = true;
+  }, [gl, tex]);
+  return (
+    <PlanetBody {...props} textures={[tex]}>
+      {look.ring && (
+        <Safe fallback={null}>
+          <Suspense fallback={null}>
+            <Ring {...look.ring} />
+          </Suspense>
+        </Safe>
+      )}
+    </PlanetBody>
+  );
+}
+
 function BodyView({ res, index, slots, starIdx }: { res: SceneResult; index: number; slots: Slots<THREE.Group>; starIdx: number[] }) {
   const b: SceneBody = res.bodies[index];
   const F = res.times.length;
@@ -222,6 +248,7 @@ function BodyView({ res, index, slots, starIdx }: { res: SceneResult; index: num
   const pos = useMemo(() => new THREE.Vector3(), []);
   const ahead = useMemo(() => new THREE.Vector3(), []);
   const minAngular = POINTLIKE.has(b.kind) || b.kind === "ship" ? 0.006 : 0.003;
+  const look = useMemo(() => lookFor(b.name), [b.name]);
 
   const starColor = useMemo(() => {
     const T = b.temperature?.find((x) => x != null) ?? 5778;
@@ -306,7 +333,16 @@ function BodyView({ res, index, slots, starIdx }: { res: SceneResult; index: num
           <EarthBody {...surfaceProps} />
         </Suspense>
       )}
-      {SURFACE_KINDS.has(b.kind) && b.kind !== "earth" && <PlanetBody {...surfaceProps} textures={null} />}
+      {SURFACE_KINDS.has(b.kind) && b.kind !== "earth" &&
+        (look ? (
+          <Safe fallback={<PlanetBody {...surfaceProps} textures={null} />}>
+            <Suspense fallback={<PlanetBody {...surfaceProps} textures={null} />}>
+              <MappedBody {...surfaceProps} look={look} />
+            </Suspense>
+          </Safe>
+        ) : (
+          <PlanetBody {...surfaceProps} textures={null} />
+        ))}
       {haloMat && <sprite ref={halo} material={haloMat} />}
     </group>
   );

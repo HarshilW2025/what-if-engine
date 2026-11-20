@@ -125,3 +125,8 @@ The picture must follow the physics and the words:
 
 Thought experiments (an impossible premise, such as a Sun made of ice cream or an Earth shaped like a jalebi): compute only what does not depend on unknowable details (mass, size, density, gravity, energy, timescales), state plainly in the assumptions where the guesswork starts, and do not invent material science.
 """
+
+COMPOSER_SYSTEM += """
+
+Body names drive the visuals: name real bodies plainly (Sun, Moon, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune) so the viewer can show real NASA-based imagery. A body that is not the real thing gets a different name, for example "Cheese Moon", "Gold Earth" or "Second Moon", so it is never drawn with the real body's face.
+"""

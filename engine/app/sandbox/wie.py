@@ -239,7 +239,7 @@ class Scene:
             raise ValueError(f"curves and clouds hold {total()} numbers, the limit is {MAX_POINT_NUMBERS}; use fewer frames")
         focus = self._camera["focus"]
         if focus is not None and focus not in [b["name"] for b in self._bodies]:
-            focus = None  # forgiving: an unknown focus falls back to the whole scene
+            self._camera = {**self._camera, "focus": None}  # forgiving: an unknown focus falls back to the whole scene
 
         def body_out(b):
             out = {"name": b["name"], "kind": b["kind"], "color": b["color"], "spin": b["spin"], "disk": b["disk"], "positions": _q(b["positions"]), "radius": _q(b["radius"])}

@@ -97,6 +97,10 @@ void main() {
     float c = pFbm(o * 12.0);
     albedo = uColor * (0.55 + 0.7 * f) * (0.85 + 0.3 * c);
     albedo = mix(albedo, vec3(0.85, 0.9, 0.95), frost * 0.5);
+  } else if (uKind == 3) {
+    albedo = texture2D(uDay, vUv).rgb; // real imagery (NASA-based maps)
+    albedo = mix(albedo, vec3(0.85, 0.9, 0.95), frost * 0.3);
+    water = 0.0;
   } else {
     float warp = pFbm(o * vec3(2.0, 6.0, 2.0) + uTime * 0.01);
     float bands = 0.5 + 0.5 * sin(o.y * 14.0 + warp * 4.0);
