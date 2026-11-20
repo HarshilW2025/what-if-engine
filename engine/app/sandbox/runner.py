@@ -3,6 +3,7 @@ restricted builtins, no secrets in the environment, CPU and wall-clock limits.""
 from __future__ import annotations
 
 import ast
+import re
 import json
 import os
 import shutil
@@ -170,5 +171,44 @@ def run_model(code: str, timeout_s: int = TIMEOUT_S) -> dict:
 
     scene = out["scene"]
     scene["engine"] = "scene"
-    scene["diagnostics"] = {"runtime_s": round(wall, 3), "checks": scene.pop("checks"), "log": proc.stderr[-2000:]}
+    checks = scene.pop("checks")
+    scene["diagnostics"] = {"runtime_s": round(wall, 3), "checks": checks, "log": proc.stderr[-2000:], "grounding": ground_answer(scene, checks)}
     return scene
+
+
+_NUM = re.compile(r"(?<![\w.])[-+]?\d[\d,]*(?:\.\d+)?(?:[eE][-+]?\d+)?")
+
+
+def _numbers_in(text: str) -> list[float]:
+    vals = []
+    for m in _NUM.findall(text or ""):
+        try:
+            vals.append(float(m.replace(",", "")))
+        except ValueError:
+            pass
+    return vals
+
+
+def ground_answer(scene: dict, checks: list[dict]) -> dict:
+    """Every number in the answer must trace to a computed value (headline numbers, captions, checks,
+    series or times) within 2%. Small counting numbers (0 to 12) are allowed."""
+    found = _numbers_in(scene.get("answer", ""))
+    refs: list[float] = [n["value"] for n in scene.get("numbers", [])]
+    for c in checks:
+        refs += [c["value"], c["expected"]]
+    for cap in scene.get("captions", []):
+        refs += _numbers_in(cap["text"]) + [cap["t"]]
+    for s in scene.get("series", []):
+        vals = [v for v in s["values"] if v is not None]
+        if vals:
+            refs += [vals[0], vals[-1], min(vals), max(vals)]
+    times = scene.get("times") or []
+    if times:
+        refs += [times[0], times[-1], times[-1] - times[0]]
+    ungrounded = []
+    for v in found:
+        if float(v).is_integer() and 0 <= abs(v) <= 12:
+            continue
+        if not any(abs(v - r) <= 0.02 * max(abs(r), 1e-300) for r in refs if r is not None):
+            ungrounded.append(v)
+    return {"numbers": len(found), "ungrounded": ungrounded}

@@ -34,6 +34,7 @@ s.caption(t, text): 3 to 8 captions at the key moments, each with real computed 
 s.series(name, values, unit): 1 to 4 key quantities over time, (F,).
 s.number(name, value, unit, note): 2 to 6 headline results.
 s.check(name, value, expected, rtol=1e-6, atol=0.0): AT LEAST 2 honest checks of a computed result against something independent, such as a conservation law, an analytic formula, a known limit or a published value. Never check a value against itself. Failed checks are sent back to you to fix the PHYSICS, never loosen a check to pass.
+s.answer(text): REQUIRED, called once. 2 to 4 plain sentences that directly answer the question for a curious non-expert, built with f-strings from your computed values (never type a number by hand). Every number in it must also appear, in the same units, in an s.number or a caption, because a checker traces each one.
 s.camera(focus=body_name_or_None, view="free"|"top"|"side").
 
 ## Tested physics helpers (prefer these whenever they fit: they are benchmarked against textbook results)
@@ -68,6 +69,7 @@ s.caption(0, f"Lunar gravity is {g:.2f} m/s², about one sixth of Earth's")
 s.caption(t_fall, f"Lands at {g * t_fall:.1f} m/s after {t_fall:.1f} s")
 s.check("numerical fall matches the kinematic formula", sol[-1, 0], z[-1], atol=1e-6)
 s.check("energy conserved", 0.5 * sol[-1, 1] ** 2, g * h0, rtol=1e-8)
+s.answer(f"On the Moon a ball dropped from {h0:.0f} m falls for {t_fall:.1f} s and lands at {g * t_fall:.1f} m/s, because lunar gravity is only {g:.2f} m/s².")
 s.camera(focus="Ball", view="side")
 
 ## simulate_orbits: units and setup

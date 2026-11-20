@@ -117,7 +117,8 @@ export interface SceneResult {
   series: { name: string; unit: string; values: Num[] }[];
   numbers: { name: string; value: number; unit: string; note: string }[];
   camera: { focus: string | null; view: "free" | "top" | "side" };
-  diagnostics: { runtime_s: number; checks: SceneCheck[]; log: string };
+  answer?: string;
+  diagnostics: { runtime_s: number; checks: SceneCheck[]; log: string; grounding?: { numbers: number; ungrounded: number[] } };
 }
 
 export type EngineResult = GravityResult | NoSimResult | SceneResult;

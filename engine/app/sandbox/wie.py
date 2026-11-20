@@ -208,6 +208,11 @@ class Scene:
         self._checks.append({"name": str(name)[:80], "value": v, "expected": e, "rtol": float(rtol), "atol": float(atol), "passed": bool(passed)})
         return self
 
+    def answer(self, text):
+        """The plain-language answer to the question: 2 to 4 sentences, numbers inserted from your computed values."""
+        self._answer = str(text)[:900]
+        return self
+
     def camera(self, focus=None, view="free"):
         if view not in VIEWS:
             raise ValueError(f"view must be one of {VIEWS}")
@@ -257,6 +262,7 @@ class Scene:
             "numbers": self._numbers,
             "checks": self._checks,
             "camera": self._camera,
+            "answer": getattr(self, "_answer", ""),
         }
 
 

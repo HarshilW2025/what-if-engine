@@ -77,3 +77,21 @@ s.check("max", pts.max(), 1.0)
     assert scene["thinned"] >= 2
     assert "temperature_each" in scene["clouds"][0]
     assert scene["diagnostics"]["checks"][0]["passed"]
+
+
+def test_answer_numbers_are_grounded():
+    code = """
+import numpy as np
+import wie
+t = np.linspace(0, 10, 50)
+s = wie.Scene(t)
+s.body("Ball", np.c_[t, 0 * t, 0 * t], radius=1.0)
+v = 28.7213
+s.number("Day length", v, "s")
+s.caption(1.0, f"Equator speed {1393.74:,.0f} km/s")
+s.check("x", 1.0, 1.0)
+s.answer(f"A day lasts {v:.1f} s and the equator moves at 1,394 km/s, which is 125 times escape speed, over 3 phases.")
+"""
+    g = run_model(code)["diagnostics"]["grounding"]
+    assert g["numbers"] == 4
+    assert g["ungrounded"] == [125.0]

@@ -37,7 +37,20 @@ export default function ScenePanel({ resp }: { resp: SimResponse }) {
         {theory ? "Theory" : "Exact physics"}
       </span>
       <h2 className="mb-1 text-base font-semibold leading-snug">{s.title}</h2>
-      <p className="mb-5 text-zinc-400">{s.question}</p>
+      <p className="mb-4 text-zinc-400">{s.question}</p>
+
+      {r.answer && (
+        <div className="mb-5 rounded-md border border-white/10 bg-white/[0.04] p-3">
+          <p className="leading-relaxed text-zinc-100">{r.answer}</p>
+          {r.diagnostics.grounding && r.diagnostics.grounding.numbers > 0 && (
+            <p className={`mt-2 text-[11px] ${r.diagnostics.grounding.ungrounded.length ? "text-amber-300" : "text-emerald-400"}`}>
+              {r.diagnostics.grounding.ungrounded.length
+                ? `⚠ ${r.diagnostics.grounding.ungrounded.length} number(s) not traced to the computation: ${r.diagnostics.grounding.ungrounded.join(", ")}`
+                : `✓ Every number in this answer is traced to the computation`}
+            </p>
+          )}
+        </div>
+      )}
 
       {theory && s.theories && s.theories.length > 0 && (
         <Section title="What scientists think">
