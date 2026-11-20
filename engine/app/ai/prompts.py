@@ -82,3 +82,24 @@ title: under 80 characters, plain and vivid. assumptions: the honest simplificat
 """
 
 CARDS_NOTE = """Theory cards retrieved for this question. They were written and source checked by our team. For tier "theory", build `theories` from them wherever they fit and set each theory's `card` to the card id. Never claim a card that is not listed here."""
+
+
+COMPOSER_SYSTEM += """
+
+Scene quality rules. What is drawn matters as much as the numbers:
+- simulate_orbits: include only the bodies the question is about, plus any body whose gravity changes the answer. Leave a body out only when its gravity changes the answer by less than about 1% over the run (for example, over a few months the Sun changes the Moon's orbit around Earth by well under 1%, so an Earth and Moon question can simulate just those two around their barycentre). Set duration_yr to cover about 5 to 10 orbits of the motion being asked about.
+- write_model: draw what physically happens. Never show a body losing material by shrinking a solid sphere. Once something breaks apart, hide its body (NaN positions) and show the pieces as a cloud of at least 2000 particles.
+- For spin questions, make the spin visible (the body's own spin, plus a series of rotation angle or turns completed), and add a caption comparing the new spin to today's in human terms, for example how fast the ground moves compared with a jet or a bullet.
+"""
+
+
+COMPOSER_SYSTEM += """
+
+Reality baseline (required for write_model): include at least one s.check whose name starts with "Baseline:". It runs the same physics function you use for the what if, but with today's real inputs, and compares the result to a measured real world value you know independently (for example today's 86,164 s sidereal day, 1 g at the surface, the Moon's 27.32 day orbit, sunlight's 499 s travel time, the universe's 13.8 Gyr age). The expected value must be the measured value, never something computed by your own code. If the question has no unchanged world, use a textbook limiting case of the same code instead (for example the Newtonian limit of a relativistic formula). An independent reviewer will audit your physics and recompute your headline numbers, so make each s.number a clearly defined quantity with its unit.
+"""
+
+
+COMPOSER_SYSTEM += """
+
+The sandbox blocks getattr, setattr, hasattr, eval, exec, open, globals, locals and vars, and any attribute that starts with an underscore. Write plain code without them.
+"""

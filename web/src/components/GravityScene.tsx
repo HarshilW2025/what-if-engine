@@ -1,7 +1,7 @@
 "use client";
 
 import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
-import { OrbitControls, Stars } from "@react-three/drei";
+import { OrbitControls } from "@react-three/drei";
 import { Bloom, EffectComposer, ToneMapping, Vignette } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
 import { Suspense, useEffect, useMemo, useRef, type RefObject } from "react";
@@ -68,6 +68,36 @@ function Player({ durations }: { durations: Float32Array }) {
   return null;
 }
 
+/** starfield drawn as fixed size pixels, so it looks the same at any scale (Earth and Moon or a whole galaxy) */
+function StarPoints() {
+  const pts = useMemo(() => {
+    const n = 6000;
+    const pos = new Float32Array(n * 3);
+    const col = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) {
+      const u = Math.random() * 2 - 1;
+      const th = Math.random() * Math.PI * 2;
+      const r = Math.sqrt(1 - u * u);
+      pos.set([100 * r * Math.cos(th), 100 * u, 100 * r * Math.sin(th)], i * 3);
+      const b = 0.3 + 0.6 * Math.pow(Math.random(), 3);
+      col.set([b, b, b * 1.05], i * 3);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute("color", new THREE.BufferAttribute(col, 3));
+    const mat = new THREE.PointsMaterial({ size: 1.6, sizeAttenuation: false, vertexColors: true, depthWrite: false });
+    return new THREE.Points(geo, mat);
+  }, []);
+  useEffect(
+    () => () => {
+      pts.geometry.dispose();
+      (pts.material as THREE.Material).dispose();
+    },
+    [pts],
+  );
+  return <primitive object={pts} />;
+}
+
 /** nebula rendered once into a cubemap background; only the star points move with the camera */
 function Sky() {
   const gl = useThree((s) => s.gl);
@@ -102,7 +132,7 @@ function Sky() {
 
   return (
     <group ref={stars}>
-      <Stars radius={100} depth={50} count={6000} factor={4} saturation={0.3} fade speed={0.3} />
+      <StarPoints />
     </group>
   );
 }
@@ -155,7 +185,7 @@ function CameraRig({ res, E0, slots }: { res: GravityResult; E0: number; slots: 
       let has = false;
       if (locked && s.focus !== null) {
         center.copy(fg!.position);
-        want = baseSizeOf(res.bodies[s.focus], E0) * 7 * s.zoom;
+        want = ((fg!.userData.size as number | undefined) ?? baseSizeOf(res.bodies[s.focus], E0)) * 7 * s.zoom;
         has = true;
       } else {
         const { i } = frameAt(res, Math.round(s.playhead));
@@ -239,7 +269,7 @@ function Labels({ res, groups, tags, temps }: { res: GravityResult; groups: Slot
       }
       const b = res.bodies[k];
       const T = temps.current[k];
-      const txt = !isStar(b) && typeof T === "number" ? `${b.name}  ${Math.round(T)} K` : b.name;
+      const txt = !isStar(b) && Number.isFinite(T) ? `${b.name}  ${Math.round(T)} K` : b.name;
       if (shown.current[k] !== txt) {
         el.textContent = txt;
         shown.current[k] = txt;
@@ -311,12 +341,27 @@ function PlanetSurface({ info, kind, stars, slots, temps, meshRef, textures }: S
         k++;
       }
     }
+    if (stars.length === 0) {
+      // no star in the simulation: neutral studio light from over the viewer's shoulder
+      tmp.copy(state.camera.position).sub(self.position).normalize();
+      tmp.x += 0.5;
+      tmp.y += 0.6;
+      u.uStarDir.value[0].copy(tmp.normalize());
+      u.uStarCol.value[0].setRGB(1, 1, 1);
+      u.uStarFlux.value[0] = 1.5;
+      k = 1;
+    }
     u.uStarCount.value = k;
     // blackbody equilibrium temperature (no albedo, no greenhouse), floor at the 2.7 K microwave background
-    const T = Math.max(2.7, 278.6 * Math.pow(S, 0.25));
-    temp.current = temp.current === null ? T : temp.current + (T - temp.current) * Math.min(1, delta * 3);
-    temps.current[info.id] = temp.current;
-    u.uTemp.value = temp.current;
+    if (stars.length === 0) {
+      temps.current[info.id] = NaN; // nothing to compute a temperature from, so none is shown
+      u.uTemp.value = 288; // surface drawn as it looks today
+    } else {
+      const T = Math.max(2.7, 278.6 * Math.pow(S, 0.25));
+      temp.current = temp.current === null ? T : temp.current + (T - temp.current) * Math.min(1, delta * 3);
+      temps.current[info.id] = temp.current;
+      u.uTemp.value = temp.current;
+    }
     u.uTime.value = state.clock.elapsedTime;
     u.uCam.value.copy(state.camera.position);
     if (meshRef.current) meshRef.current.rotation.y += delta * 0.15;
@@ -369,7 +414,7 @@ function Body({ res, index, E0, slots, stars, temps }: { res: GravityResult; ind
     [star, color],
   );
 
-  const { trail, trailMat, lastValid } = useMemo(() => {
+  const { trail, trailMat, lastValid, trailExtent } = useMemo(() => {
     const n = res.positions.length;
     const pos = new Float32Array(n * 3);
     const idx = new Float32Array(n);
@@ -397,7 +442,20 @@ function Body({ res, index, E0, slots, stars, temps }: { res: GravityResult; ind
     });
     const line = new THREE.Line(geo, trailMat);
     line.frustumCulled = false;
-    return { trail: line, trailMat, lastValid };
+    let cx = 0, cy = 0, cz = 0, cnt = 0;
+    for (let f = 0; f < n; f++) {
+      const p = res.positions[f][index];
+      if (p) { cx += p[0]; cy += p[1]; cz += p[2]; cnt++; }
+    }
+    let trailExtent = 0;
+    if (cnt) {
+      cx /= cnt; cy /= cnt; cz /= cnt;
+      for (let f = 0; f < n; f++) {
+        const p = res.positions[f][index];
+        if (p) trailExtent = Math.max(trailExtent, Math.hypot(p[0] - cx, p[1] - cy, p[2] - cz));
+      }
+    }
+    return { trail: line, trailMat, lastValid, trailExtent };
   }, [res, index, info.color, trailLen]);
 
   useEffect(
@@ -434,8 +492,19 @@ function Body({ res, index, E0, slots, stars, temps }: { res: GravityResult; ind
     g.position.set(...toScene(p));
 
     const dist = state.camera.position.distanceTo(g.position);
-    const s = Math.max(baseSize, dist * minAngular);
+    // honest size: never below the true radius, enlarged only when tiny on screen, never past 30% of the gap to the nearest body
+    let near = Infinity;
+    const fr = res.positions[i];
+    for (let j = 0; j < fr.length; j++) {
+      const q = fr[j];
+      if (j === index || !q) continue;
+      near = Math.min(near, Math.hypot(q[0] - a[0], q[1] - a[1], q[2] - a[2]));
+    }
+    const s = Math.max(info.radius_au, Math.min(Math.max(baseSize, dist * minAngular), near * 0.3));
+    g.userData.size = s;
     if (sp) sp.scale.setScalar(s);
+    // a trail helps only when the motion is big next to the body; a wobble inside the body is noise
+    trail.visible = trailExtent > 3 * s;
     if (starMat && sp) {
       starMat.uniforms.uTime.value = state.clock.elapsedTime;
       sp.rotation.y += delta * 0.05;

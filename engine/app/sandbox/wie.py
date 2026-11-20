@@ -94,7 +94,7 @@ class Scene:
         if not 2 <= t.size <= MAX_FRAMES:
             raise ValueError(f"times must have 2 to {MAX_FRAMES} entries, got {t.size}")
         if not np.all(np.isfinite(t)) or np.any(np.diff(t) <= 0):
-            raise ValueError("times must be finite and strictly increasing")
+            raise ValueError("times must be finite and strictly increasing. Build one clock with np.linspace or np.arange and interpolate any other clock (proper time, distant time) onto it with np.interp")
         self.t = t
         self.F = t.size
         self.time_unit = str(time_unit)[:20]
@@ -185,8 +185,7 @@ class Scene:
 
     def caption(self, t, text):
         t = float(t)
-        if not self.t[0] - 1e-9 * abs(self.t[-1]) <= t <= self.t[-1] * (1 + 1e-9) + 1e-12:
-            raise ValueError(f"caption time {t} is outside the scene's times")
+        t = float(min(max(float(t), float(self.t[0])), float(self.t[-1])))  # forgiving: a caption just outside the run is pulled to the nearest end
         self._captions.append({"t": t, "text": str(text)[:220]})
         return self
 

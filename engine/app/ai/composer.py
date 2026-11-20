@@ -130,14 +130,45 @@ def ask(question: str, progress=None) -> dict:
             if block.name == TOOL_ORBITS:
                 spec = ScenarioSpec.model_validate(block.input).model_copy(update={"question": question})
                 out = run_spec(spec)
+                res = out.get("result", {})
+                if res.get("engine") == "gravity":
+                    from app.ai.reviewer import orbit_check, review_orbits
+                    report("verify", "An independent reviewer is auditing the setup")
+                    rev = review_orbits(client, MODEL, question, block.input, res)
+                    if rev is not None:
+                        meta["review"] = rev
+                        chk = orbit_check(rev)
+                        res.setdefault("diagnostics", {}).setdefault("checks", []).append(chk)
+                        if not chk["passed"] and attempt < MAX_ATTEMPTS:
+                            raise EngineError("an independent reviewer found a problem with the setup: " + "; ".join(rev["problems"]))
+                        report("verify", "Independent review passed" if chk["passed"] else "Independent review found a problem")
                 out["meta"] = meta
                 return out
 
             m = ModelSpec.model_validate(block.input)
             scene = run_model(m.code)
+            from app.sandbox.runner import scene_checks
+            scene["diagnostics"]["checks"] += scene_checks(scene)
             failed = [c for c in scene["diagnostics"]["checks"] if not c["passed"]]
             n_checks = len(scene["diagnostics"]["checks"])
             report("check", f"Self checks: {n_checks - len(failed)} of {n_checks} passed" + (", repairing" if failed and attempt < MAX_ATTEMPTS else ""))
+            if block.name == TOOL_MODEL:
+                from app.ai.reviewer import as_check, review
+                if not any(str(c.get("name", "")).lower().startswith("baseline") for c in scene["diagnostics"]["checks"]):
+                    miss = {"name": "No reality baseline: add an s.check named 'Baseline: ...' that runs the same physics with today's real inputs and compares it to a measured value",
+                            "value": 0.0, "expected": 1.0, "rtol": 0.0, "atol": 0.0, "passed": False, "source": "baseline"}
+                    scene["diagnostics"]["checks"].append(miss)
+                    failed.append(miss)
+                if not failed:
+                    report("verify", "An independent reviewer is auditing the physics")
+                    rev = review(client, MODEL, question, block.input.get("code", ""), scene)
+                    if rev is not None:
+                        meta["review"] = {k: rev[k] for k in ("status", "problems", "matched", "mismatches", "tokens")}
+                        chk = as_check(rev)
+                        scene["diagnostics"]["checks"].append(chk)
+                        if not chk["passed"]:
+                            failed.append(chk)
+                        report("verify", "Independent review passed" if chk["passed"] else "Independent review found a problem, repairing")
             if failed and attempt < MAX_ATTEMPTS:
                 problem = "Self checks failed: " + "; ".join(
                     f"{c['name']}: got {c['value']:.6g}, expected {c['expected']:.6g}" for c in failed

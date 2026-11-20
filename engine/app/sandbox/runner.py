@@ -212,3 +212,84 @@ def ground_answer(scene: dict, checks: list[dict]) -> dict:
         if not any(abs(v - r) <= 0.02 * max(abs(r), 1e-300) for r in refs if r is not None):
             ungrounded.append(v)
     return {"numbers": len(found), "ungrounded": ungrounded}
+
+
+SOLID_KINDS = {"star", "planet", "earth", "moon", "rock", "blackhole"}
+
+
+def _scene_fail(text, value, expected):
+    return {"name": text, "value": float(value), "expected": float(expected), "rtol": 0.0, "atol": 0.0, "passed": False, "source": "scene"}
+
+
+def scene_checks(scene: dict) -> list[dict]:
+    """Checks that the picture matches the physics, whatever the question. Only failures are returned; they trigger a repair.
+    A bug in these checks must never break an answer, so any error here skips them."""
+    try:
+        return _scene_checks(scene)
+    except Exception:
+        import logging
+        logging.getLogger("scene_checks").exception("scene checks skipped")
+        return []
+
+
+def _per_frame(x, n, np):
+    a = np.array(1.0 if x is None else x, dtype=float)
+    return np.full(n, float(a)) if a.ndim == 0 else a.reshape(-1)
+
+
+def _scene_checks(scene: dict) -> list[dict]:
+    import numpy as np
+
+    out = []
+    bodies = [b for b in scene.get("bodies", []) if b.get("kind") in SOLID_KINDS]
+    arrs = []
+    for b in bodies:
+        P = np.array(b["positions"], dtype=float).reshape(-1, 3)
+        r, sc = _per_frame(b.get("radius"), len(P), np), _per_frame(b.get("scale"), len(P), np)
+        n = min(len(P), len(r), len(sc))
+        arrs.append((P[:n], r[:n] * sc[:n]))
+
+    # 1. separate bodies must not be drawn overlapping
+    for i in range(len(bodies)):
+        for j in range(i + 1, len(bodies)):
+            (Pi, ri), (Pj, rj) = arrs[i], arrs[j]
+            n = min(len(Pi), len(Pj))
+            d = np.linalg.norm(Pi[:n] - Pj[:n], axis=1)
+            both = np.isfinite(d) & np.isfinite(ri[:n]) & np.isfinite(rj[:n])
+            if not both.any():
+                continue
+            k = int(np.argmax(both))
+            same_size = abs(ri[k] - rj[k]) <= 0.01 * max(ri[k], rj[k], 1e-300)
+            if bodies[i].get("kind") == bodies[j].get("kind") and same_size and d[k] < 0.1 * (ri[k] + rj[k]):
+                continue  # a comparison copy ("Earth if the Sun had stayed") starts on top of the original on purpose
+            frac = float((both & (d < 0.9 * (ri[:n] + rj[:n]))).sum() / both.sum())
+            if frac > 0.1:
+                out.append(_scene_fail(
+                    f"{bodies[i]['name']} and {bodies[j]['name']} are drawn overlapping in {frac:.0%} of frames. "
+                    "Use true radii or a smaller scale so separate bodies look separate; if they collide, end one body (NaN) at impact",
+                    frac, 0.0))
+
+    # 2. a solid body must not shrink while a cloud of its material flies away
+    clouds = scene.get("clouds", [])
+    for b, (P, r) in zip(bodies, arrs):
+        ok = np.isfinite(r) & np.isfinite(P).all(axis=1)
+        if ok.sum() < 3 or not clouds or not np.isfinite(r[0]) or r[0] <= 0:
+            continue
+        shrink = float(np.nanmin(r[ok]) / r[0])
+        if shrink > 0.7:
+            continue
+        for c in clouds:
+            pts = c.get("points") or []
+            if len(pts) < 2:
+                continue
+            first = np.array(pts[0], dtype=float).reshape(-1, 3)
+            last = np.array(pts[-1], dtype=float).reshape(-1, 3)
+            d0 = np.nanmedian(np.linalg.norm(first - P[0], axis=1))
+            d1 = np.nanmedian(np.linalg.norm(last - P[0], axis=1))
+            if np.isfinite(d0) and np.isfinite(d1) and d1 > 1.5 * max(d0, 1e-30):
+                out.append(_scene_fail(
+                    f"{b['name']} is drawn as a solid sphere that shrinks to {shrink:.0%} of its size while '{c.get('name', 'cloud')}' flies away. "
+                    "That reads as the planet shrinking. Hide the body (NaN positions) once it breaks apart and let the cloud carry the material",
+                    shrink, 1.0))
+                break
+    return out
