@@ -119,7 +119,7 @@ class Scene:
             raise ValueError(f"{name} contains infinity")
         return a
 
-    def body(self, name, positions, radius, kind="generic", color=None, temperature=None, scale=None, spin=0.0):
+    def body(self, name, positions, radius, kind="generic", color=None, temperature=None, scale=None, spin=0.0, disk=False):
         """A solid object. positions (3,) or (F,3), NaN rows = not present. radius () or (F,).
         temperature in K () or (F,). scale (3,) or (F,3) stretches the shape. spin in radians per time unit."""
         name = str(name)[:40]
@@ -136,6 +136,7 @@ class Scene:
             "positions": self._frames(positions, f"{name} positions", (3,)),
             "radius": self._frames(radius, f"{name} radius", ()),
             "spin": float(spin),
+            "disk": bool(disk),
         }
         if np.any(b["radius"] < 0):
             raise ValueError(f"{name} radius must be >= 0")
@@ -242,7 +243,7 @@ class Scene:
             raise ValueError(f"camera focus {focus!r} is not a body name")
 
         def body_out(b):
-            out = {"name": b["name"], "kind": b["kind"], "color": b["color"], "spin": b["spin"], "positions": _q(b["positions"]), "radius": _q(b["radius"])}
+            out = {"name": b["name"], "kind": b["kind"], "color": b["color"], "spin": b["spin"], "disk": b["disk"], "positions": _q(b["positions"]), "radius": _q(b["radius"])}
             if "temperature" in b:
                 out["temperature"] = _q(b["temperature"])
             if "scale" in b:

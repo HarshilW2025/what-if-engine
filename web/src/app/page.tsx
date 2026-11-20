@@ -6,7 +6,8 @@ import AccuracyPanel from "@/components/AccuracyPanel";
 import ScenePanel from "@/components/ScenePanel";
 import SceneTimeline from "@/components/SceneTimeline";
 import Timeline from "@/components/Timeline";
-import { ask, simulate } from "@/lib/api";
+import LoadingFacts from "@/components/LoadingFacts";
+import { askWithProgress, simulate } from "@/lib/api";
 import { FOUR_SUNS } from "@/lib/demoSpecs";
 import { usePlayer } from "@/lib/store";
 import type { SimResponse } from "@/lib/types";
@@ -58,11 +59,10 @@ export default function Home() {
     const text = (q ?? question).trim();
     if (text.length < 3 || loading) return;
     if (q) setQuestion(q);
-    go("ask", () => ask(text));
+    go("ask", () => askWithProgress(text, (steps) => console.debug("[pipeline]", steps.at(-1)?.detail)));
   }
 
   const result = response?.result;
-  const stage = elapsed < 20 ? "Claude is working out the physics" : elapsed < 60 ? "Writing and running the model" : "Checking the results, nearly there";
 
   return (
     <main className="flex h-screen w-screen flex-col bg-[#02030a] text-zinc-100">
@@ -138,9 +138,7 @@ export default function Home() {
 
           {loading === "ask" && (
             <div className="pointer-events-none absolute inset-0 grid place-items-center bg-black/40 backdrop-blur-[2px]">
-              <div className="rounded-lg border border-white/10 bg-black/70 px-5 py-3 text-sm text-zinc-200">
-                {stage} · {elapsed}s
-              </div>
+              <LoadingFacts elapsed={elapsed} />
             </div>
           )}
         </section>

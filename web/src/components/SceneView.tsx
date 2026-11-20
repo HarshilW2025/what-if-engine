@@ -1,7 +1,7 @@
 "use client";
 
 import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
-import { OrbitControls, Stars } from "@react-three/drei";
+import { OrbitControls } from "@react-three/drei";
 import { Bloom, EffectComposer, ToneMapping, Vignette } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
 import { Suspense, useEffect, useMemo, useRef, type RefObject } from "react";
@@ -10,6 +10,7 @@ import { fmt } from "@/lib/fmt";
 import { usePlayer } from "@/lib/store";
 import type { Num, SceneBody, SceneCloud, SceneCurve, SceneResult } from "@/lib/types";
 import { ZoomButtons, ZoomInput } from "./GravityScene";
+import { BlackHoleVisual } from "./scene/blackHole";
 import { MAX_STARS, PLANET_FRAG, PLANET_VERT } from "./scene/planetShaders";
 import { SKY_FRAG, SKY_VERT, STAR_FRAG, STAR_VERT } from "./scene/shaders";
 import { glowTexture, kelvinToColor, ringTexture } from "./scene/visuals";
@@ -87,39 +88,46 @@ function Player({ F }: { F: number }) {
   return null;
 }
 
+/** nebula plus stars baked once into a cubemap; also the sky that black holes lens */
 function Sky() {
   const gl = useThree((s) => s.gl);
   const scene = useThree((s) => s.scene);
-  const camera = useThree((s) => s.camera);
-  const controls = useThree((s) => s.controls) as unknown as Controls | null;
-  const stars = useRef<THREE.Group>(null);
   useEffect(() => {
     const rt = new THREE.WebGLCubeRenderTarget(1024, { type: THREE.HalfFloatType });
     const skyScene = new THREE.Scene();
     const geo = new THREE.SphereGeometry(5, 64, 64);
     const mat = new THREE.ShaderMaterial({ vertexShader: SKY_VERT, fragmentShader: SKY_FRAG, side: THREE.BackSide, depthWrite: false });
     skyScene.add(new THREE.Mesh(geo, mat));
+    const N = 7000;
+    const pos = new Float32Array(N * 3);
+    const col = new Float32Array(N * 3);
+    const tint = new THREE.Color();
+    for (let k = 0; k < N; k++) {
+      const u = Math.random() * 2 - 1;
+      const th = Math.random() * Math.PI * 2;
+      const r = Math.sqrt(1 - u * u) * 4;
+      pos.set([r * Math.cos(th), u * 4, r * Math.sin(th)], k * 3);
+      const m = Math.pow(Math.random(), 4) * 2.2 + 0.25;
+      tint.setHSL(Math.random() < 0.7 ? 0.6 : 0.08, 0.35, 0.75).multiplyScalar(m);
+      col.set([tint.r, tint.g, tint.b], k * 3);
+    }
+    const sg = new THREE.BufferGeometry();
+    sg.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    sg.setAttribute("color", new THREE.BufferAttribute(col, 3));
+    const sm = new THREE.PointsMaterial({ size: 1.6, sizeAttenuation: false, vertexColors: true, depthWrite: false });
+    skyScene.add(new THREE.Points(sg, sm));
     new THREE.CubeCamera(0.1, 100, rt).update(gl, skyScene);
     geo.dispose();
     mat.dispose();
+    sg.dispose();
+    sm.dispose();
     scene.background = rt.texture;
     return () => {
       if (scene.background === rt.texture) scene.background = null;
       rt.dispose();
     };
   }, [gl, scene]);
-  useFrame(() => {
-    const g = stars.current;
-    if (!g) return;
-    g.position.copy(camera.position);
-    const d = controls ? camera.position.distanceTo(controls.target) : camera.position.length();
-    g.scale.setScalar(Math.max(d, 1e-9) * 1.5);
-  });
-  return (
-    <group ref={stars}>
-      <Stars radius={100} depth={50} count={6000} factor={4} saturation={0.3} fade speed={0.3} />
-    </group>
-  );
+  return null;
 }
 
 // ---------- bodies ----------
@@ -210,6 +218,7 @@ function BodyView({ res, index, slots, starIdx }: { res: SceneResult; index: num
   const group = useRef<THREE.Group | null>(null);
   const mesh = useRef<THREE.Mesh | null>(null);
   const halo = useRef<THREE.Sprite>(null);
+  const bh = useRef<THREE.Group | null>(null);
   const pos = useMemo(() => new THREE.Vector3(), []);
   const ahead = useMemo(() => new THREE.Vector3(), []);
   const minAngular = POINTLIKE.has(b.kind) || b.kind === "ship" ? 0.006 : 0.003;
@@ -225,7 +234,6 @@ function BodyView({ res, index, slots, starIdx }: { res: SceneResult; index: num
   const haloMat = useMemo(() => {
     const base = { blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, toneMapped: false } as const;
     if (b.kind === "star") return new THREE.SpriteMaterial({ ...base, map: glowTexture(), color: starColor.clone().multiplyScalar(1.6) });
-    if (b.kind === "blackhole") return new THREE.SpriteMaterial({ ...base, map: ringTexture(), color: new THREE.Color(3, 1.4, 0.5) });
     if (b.kind === "light") return new THREE.SpriteMaterial({ ...base, map: glowTexture(), color: new THREE.Color(b.color ?? "#fff6d8").multiplyScalar(3) });
     if (b.kind === "particle") return new THREE.SpriteMaterial({ ...base, map: glowTexture(), color: new THREE.Color(b.color ?? KIND_COLOR.particle).multiplyScalar(2) });
     if (b.kind === "ship") return new THREE.SpriteMaterial({ ...base, map: glowTexture(), color: new THREE.Color(0.6, 1.2, 3) });
@@ -263,6 +271,7 @@ function BodyView({ res, index, slots, starIdx }: { res: SceneResult; index: num
     }
     if (starMat) starMat.uniforms.uTime.value = state.clock.elapsedTime;
     if (halo.current) halo.current.scale.setScalar(s * haloMul);
+    if (bh.current) bh.current.scale.setScalar(s);
     if (b.kind === "ship" && sampleVec(b.positions, j, Math.min(j + 1, F - 1), 0, ahead) && ahead.distanceToSquared(pos) > 0) g.lookAt(ahead);
   });
 
@@ -285,12 +294,7 @@ function BodyView({ res, index, slots, starIdx }: { res: SceneResult; index: num
           <sphereGeometry args={[1, 64, 64]} />
         </mesh>
       )}
-      {b.kind === "blackhole" && (
-        <mesh ref={mesh}>
-          <sphereGeometry args={[1, 48, 48]} />
-          <meshBasicMaterial color="#000000" />
-        </mesh>
-      )}
+      {b.kind === "blackhole" && <BlackHoleVisual groupRef={bh} disk={!!b.disk} />}
       {b.kind === "ship" && (
         <mesh ref={mesh} rotation={[Math.PI / 2, 0, 0]}>
           <coneGeometry args={[0.35, 1.6, 16]} />

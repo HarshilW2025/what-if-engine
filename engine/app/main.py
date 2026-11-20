@@ -1,5 +1,8 @@
+import logging
 import os
+import threading
 import time
+import uuid
 from collections import defaultdict, deque
 from pathlib import Path
 
@@ -40,6 +43,16 @@ def _allow(ip: str) -> bool:
     return True
 
 
+_jobs: dict[str, dict] = {}
+JOB_TTL_S = 900
+
+
+def _prune_jobs() -> None:
+    now = time.time()
+    for jid in [j for j, job in _jobs.items() if now - job["t0"] > JOB_TTL_S]:
+        _jobs.pop(jid, None)
+
+
 class AskRequest(BaseModel):
     question: str = Field(min_length=3, max_length=500)
 
@@ -78,4 +91,54 @@ def ask_endpoint(body: AskRequest, request: Request, fresh: bool = False):
     except ComposeError as e:
         raise HTTPException(status_code=422, detail=str(e))
     cache.put(q, out)
+    return out
+
+
+@app.post("/ask/start")
+def ask_start(body: AskRequest, request: Request, fresh: bool = False):
+    """Starts a question as a background job; poll /ask/status/{job}. Short polls survive proxy timeouts."""
+    q = body.question.strip()
+    if not fresh:
+        hit = cache.get(q)
+        if hit:
+            hit.setdefault("meta", {})["cached"] = True
+            return {"job": None, "done": True, "result": hit}
+    ip = request.headers.get("x-forwarded-for", "").split(",")[0].strip() or (request.client.host if request.client else "?")
+    if not _allow(ip):
+        raise HTTPException(status_code=429, detail="Too many questions this hour. Try again a bit later.")
+    _prune_jobs()
+    jid = uuid.uuid4().hex
+    job = {"t0": time.time(), "stage": "queued", "detail": "Starting", "steps": [], "done": False, "result": None, "error": None}
+    _jobs[jid] = job
+
+    def progress(stage: str, detail: str) -> None:
+        job["stage"], job["detail"] = stage, detail
+        job["steps"].append({"stage": stage, "detail": detail, "t": round(time.time() - job["t0"], 1)})
+
+    def work() -> None:
+        try:
+            out = ask(q, progress)
+            out.setdefault("meta", {})["pipeline"] = job["steps"]
+            cache.put(q, out)
+            job["result"] = out
+        except ComposeError as e:
+            job["error"] = str(e)
+        except Exception:
+            logging.getLogger("jobs").exception("job failed")
+            job["error"] = "Something went wrong on the server. Please try again."
+        finally:
+            job["done"] = True
+
+    threading.Thread(target=work, daemon=True).start()
+    return {"job": jid, "done": False}
+
+
+@app.get("/ask/status/{jid}")
+def ask_status(jid: str):
+    job = _jobs.get(jid)
+    if job is None:
+        raise HTTPException(status_code=404, detail="That question expired. Please ask again.")
+    out = {k: job[k] for k in ("stage", "detail", "steps", "done", "error")}
+    if job["done"] and job["result"] is not None:
+        out["result"] = job["result"]
     return out

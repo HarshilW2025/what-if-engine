@@ -77,6 +77,7 @@ export interface SceneBody {
   radius: Num[];
   temperature?: Num[];
   scale?: Num[][];
+  disk?: boolean;
 }
 
 export interface SceneCurve {

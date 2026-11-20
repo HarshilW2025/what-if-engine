@@ -95,12 +95,15 @@ def _call(client: Anthropic, messages: list[dict]):
         raise ComposeError(f"The AI service failed: {getattr(e, 'message', e)}") from e
 
 
-def ask(question: str) -> dict:
-    """question -> Claude picks a tool -> validate -> run -> self checks. Up to two repair rounds."""
+def ask(question: str, progress=None) -> dict:
+    """question -> Claude picks a tool -> validate -> run -> self checks. Up to two repair rounds.
+    progress(stage, detail) is called at each real step (kept in meta.pipeline for debugging)."""
+    report = progress or (lambda stage, detail: None)
     client = get_client()
     library, _ = card_lib.load_cards()
     found = card_lib.retrieve(question, library)
     by_id = {c.id: c for c in found}
+    report("retrieve", f"Found {len(found)} relevant theory card{'s' if len(found) != 1 else ''}" if found else "No theory cards needed: established physics")
     content = f"Question: {question}"
     if found:
         content += "\n\n" + CARDS_NOTE + "\n" + "\n".join(f'<card id="{c.id}">{json.dumps(c.for_prompt())}</card>' for c in found)
@@ -109,6 +112,7 @@ def ask(question: str) -> dict:
 
     for attempt in range(1, MAX_ATTEMPTS + 1):
         meta["attempts"] = attempt
+        report("compose", "Claude is writing the physics model" if attempt == 1 else f"Claude is fixing the model (attempt {attempt} of {MAX_ATTEMPTS})")
         resp = _call(client, messages)
         meta["input_tokens"] += resp.usage.input_tokens
         meta["output_tokens"] += resp.usage.output_tokens
@@ -121,6 +125,7 @@ def ask(question: str) -> dict:
             continue
 
         meta["route"] = block.name
+        report("run", "Running the N-body gravity integrator" if block.name == TOOL_ORBITS else "Running the model in the sandbox")
         try:
             if block.name == TOOL_ORBITS:
                 spec = ScenarioSpec.model_validate(block.input).model_copy(update={"question": question})
@@ -131,6 +136,8 @@ def ask(question: str) -> dict:
             m = ModelSpec.model_validate(block.input)
             scene = run_model(m.code)
             failed = [c for c in scene["diagnostics"]["checks"] if not c["passed"]]
+            n_checks = len(scene["diagnostics"]["checks"])
+            report("check", f"Self checks: {n_checks - len(failed)} of {n_checks} passed" + (", repairing" if failed and attempt < MAX_ATTEMPTS else ""))
             if failed and attempt < MAX_ATTEMPTS:
                 problem = "Self checks failed: " + "; ".join(
                     f"{c['name']}: got {c['value']:.6g}, expected {c['expected']:.6g}" for c in failed
@@ -162,6 +169,7 @@ def ask(question: str) -> dict:
             problem = f"The model failed:\n{e}"
 
         log.warning("attempt %d failed: %s", attempt, problem[:500])
+        report("repair", "Found a problem: " + problem.splitlines()[0][:110])
         messages.append({"role": "assistant", "content": [{"type": "tool_use", "id": block.id, "name": block.name, "input": block.input}]})
         messages.append(
             {
