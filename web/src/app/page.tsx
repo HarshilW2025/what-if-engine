@@ -69,7 +69,7 @@ export default function Home() {
       className={
         big
           ? "mt-10 flex w-full max-w-2xl gap-2 rounded-2xl border border-white/15 bg-black/45 p-2 shadow-2xl backdrop-blur-md"
-          : "mx-auto flex min-w-0 max-w-2xl flex-1 gap-2"
+          : "mx-auto flex min-w-0 max-w-2xl flex-1 gap-2 max-md:order-last max-md:basis-full"
       }
     >
       <input
@@ -132,8 +132,8 @@ export default function Home() {
           {loadingOverlay}
         </main>
       ) : (
-        <main className="flex h-screen w-screen flex-col bg-[#02030a] text-zinc-100">
-          <header className="flex items-center gap-4 border-b border-white/10 py-3 pl-5 pr-36">
+        <main className="flex min-h-[100dvh] w-full flex-col bg-[#02030a] text-zinc-100 md:h-screen md:w-screen">
+          <header className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-white/10 px-3 py-3 md:flex-nowrap md:pl-5 md:pr-36">
             <button onClick={back} className="shrink-0 rounded-lg border border-white/15 px-3 py-1.5 text-sm hover:bg-white/5">
               ← Back
             </button>
@@ -143,8 +143,8 @@ export default function Home() {
 
           {error && <div className="border-b border-rose-500/30 bg-rose-500/10 px-6 py-2 text-sm text-rose-300">{error}</div>}
 
-          <div className="flex min-h-0 flex-1">
-            <section className="relative min-w-0 flex-1 overflow-hidden">
+          <div className="flex min-h-0 flex-1 max-md:contents">
+            <section className="relative min-w-0 flex-1 overflow-hidden max-md:order-1 max-md:h-[58dvh] max-md:flex-none">
               {result?.engine === "gravity" ? (
                 <GravityScene key={runId} res={result} />
               ) : result?.engine === "scene" ? (
@@ -166,19 +166,19 @@ export default function Home() {
               {loadingOverlay}
             </section>
             {result && result.engine !== "none" && (
-              <aside className="w-96 shrink-0 overflow-y-auto border-l border-white/10 bg-black/30 p-6">
+              <aside className="w-96 shrink-0 overflow-y-auto border-l border-white/10 bg-black/30 p-6 max-md:order-3 max-md:w-full max-md:overflow-visible max-md:border-l-0 max-md:border-t max-md:p-4">
                 <AnswerPanel resp={response} />
               </aside>
             )}
           </div>
 
           {result?.engine === "gravity" && (
-            <footer className="border-t border-white/10 px-6 py-3">
+            <footer className="border-t border-white/10 px-6 py-3 max-md:order-2 max-md:px-3">
               <Timeline times={result.times} />
             </footer>
           )}
           {result?.engine === "scene" && (
-            <footer className="border-t border-white/10 px-6 py-3">
+            <footer className="border-t border-white/10 px-6 py-3 max-md:order-2 max-md:px-3">
               <SceneTimeline res={result} />
             </footer>
           )}

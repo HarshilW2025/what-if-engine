@@ -28,7 +28,7 @@ export default function SceneTimeline({ res }: { res: SceneResult }) {
   const now = res.times[i] + (res.times[j] - res.times[i]) * (playhead - i);
 
   return (
-    <div className="flex items-center gap-5">
+    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 md:flex-nowrap">
       <input
         type="range"
         min={0}
@@ -36,9 +36,9 @@ export default function SceneTimeline({ res }: { res: SceneResult }) {
         step={0.01}
         value={playhead}
         onChange={(e) => setPlayhead(Number(e.target.value))}
-        className="min-w-0 flex-1 accent-amber-300"
+        className="min-w-0 flex-1 accent-amber-300 max-md:basis-full"
       />
-      <span className="w-56 shrink-0 text-right font-mono text-sm text-zinc-200">
+      <span className="shrink-0 text-right font-mono text-sm text-zinc-200 md:w-56">
         t = {fmt(now)} {res.time_unit}
       </span>
     </div>

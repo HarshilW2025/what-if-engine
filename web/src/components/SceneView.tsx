@@ -1,5 +1,6 @@
 "use client";
 
+import { useCompact } from "@/lib/useCompact";
 import "./scene/nanSafe";
 
 import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
@@ -754,13 +755,14 @@ function Labels({ res, groups, tags }: { res: SceneResult; groups: Slots<THREE.G
 // ---------- DOM overlays ----------
 function CaptionBar({ res }: { res: SceneResult }) {
   const playhead = usePlayer((s) => s.playhead);
+  const compact = useCompact();
   const now = sceneTime(res, playhead);
   let cap: { t: number; text: string } | null = null;
   for (const c of res.captions) if (c.t <= now + 1e-12 * Math.max(1, Math.abs(now))) cap = c;
   if (!cap) return null;
   return (
-    <div style={{ position: "absolute", left: "50%", bottom: 24, transform: "translateX(-50%)", maxWidth: "78%" }}>
-      <div key={cap.text} className="rounded-lg border border-white/10 bg-black/65 px-4 py-2 text-center text-[15px] font-medium leading-snug text-white backdrop-blur">
+    <div style={{ position: "absolute", left: "50%", bottom: compact ? 60 : 24, transform: "translateX(-50%)", maxWidth: compact ? "94%" : "78%", width: compact ? "max-content" : undefined }}>
+      <div key={cap.text} className={`rounded-lg border border-white/10 bg-black/65 text-center font-medium leading-snug text-white backdrop-blur ${compact ? "px-3 py-1.5 text-xs" : "px-4 py-2 text-[15px]"}`}>
         {cap.text}
       </div>
     </div>
@@ -807,7 +809,8 @@ function Spark({ s, i }: { s: SceneResult["series"][number]; i: number }) {
 
 function SeriesPanel({ res }: { res: SceneResult }) {
   const playhead = usePlayer((s) => s.playhead);
-  if (!res.series.length) return null;
+  const compact = useCompact();
+  if (!res.series.length || compact) return null; // phones: the numbers are in the panel below
   const { i } = cursor(res.times.length, Math.round(playhead));
   return (
     <div style={{ position: "absolute", right: 12, top: 12, width: 288, maxHeight: "calc(100% - 200px)", overflowY: "auto", display: "flex", flexDirection: "column", gap: 8 }}>
@@ -821,14 +824,15 @@ function SeriesPanel({ res }: { res: SceneResult }) {
 function ViewChips({ res }: { res: SceneResult }) {
   const focus = usePlayer((s) => s.focus);
   const setFocus = usePlayer((s) => s.setFocus);
+  const compact = useCompact();
   const items = [{ id: null as number | null, name: "All" }, ...res.bodies.map((b, k) => ({ id: k as number | null, name: b.name, kind: b.kind })).filter((x) => !("kind" in x) || !POINTLIKE.has(x.kind as string)).slice(0, MAX_LABELS)];
   return (
-    <div style={{ position: "absolute", left: 12, top: 12, display: "flex", flexWrap: "wrap", gap: 6, maxWidth: "calc(100% - 330px)" }}>
+    <div style={{ position: "absolute", left: compact ? 8 : 12, top: compact ? 8 : 12, display: "flex", flexWrap: compact ? "nowrap" : "wrap", overflowX: compact ? "auto" : undefined, gap: 6, maxWidth: compact ? "calc(100% - 16px)" : "calc(100% - 330px)" }}>
       {items.map((it) => (
         <button
           key={it.id ?? "all"}
           onClick={() => setFocus(it.id)}
-          className={`rounded-lg border px-3.5 py-1.5 text-sm backdrop-blur ${focus === it.id ? "border-white/40 bg-white/15 text-white" : "border-white/10 bg-black/40 text-white/60 hover:text-white"}`}
+          className={`shrink-0 whitespace-nowrap rounded-lg border backdrop-blur ${compact ? "px-2.5 py-1 text-xs" : "px-3.5 py-1.5 text-sm"} ${focus === it.id ? "border-white/40 bg-white/15 text-white" : "border-white/10 bg-black/40 text-white/60 hover:text-white"}`}
         >
           {it.name}
         </button>

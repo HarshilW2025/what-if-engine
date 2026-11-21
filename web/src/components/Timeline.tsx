@@ -28,7 +28,7 @@ export default function Timeline({ times }: { times: number[] }) {
   const yr = times[i] + ((times[Math.min(i + 1, last)] - times[i]) * frac || 0);
 
   return (
-    <div className="flex items-center gap-5">
+    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 md:flex-nowrap">
       <input
         type="range"
         min={0}
@@ -39,7 +39,7 @@ export default function Timeline({ times }: { times: number[] }) {
           usePlayer.setState({ playing: false });
           setPlayhead(Number(e.target.value));
         }}
-        className="min-w-0 flex-1 accent-amber-300"
+        className="min-w-0 flex-1 accent-amber-300 max-md:basis-full"
       />
       <span className="w-32 shrink-0 text-right text-base tabular-nums text-zinc-200">{years(yr)}</span>
       <label className="flex shrink-0 cursor-pointer items-center gap-2 text-sm text-zinc-300" title="Spends more screen time on close passes and merges, less on empty drift. The physics is unchanged.">

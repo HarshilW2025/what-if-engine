@@ -1,5 +1,6 @@
 "use client";
 
+import { useCompact } from "@/lib/useCompact";
 import "./scene/nanSafe";
 
 import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
@@ -662,14 +663,15 @@ function MergeFlash({ res, ev }: { res: GravityResult; ev: MergeEvent }) {
 function ViewChips({ res }: { res: GravityResult }) {
   const focus = usePlayer((s) => s.focus);
   const setFocus = usePlayer((s) => s.setFocus);
+  const compact = useCompact();
   const items: { id: number | null; name: string }[] = [{ id: null, name: "All" }, ...res.bodies.slice(0, MAX_LABELS).map((b) => ({ id: b.id, name: b.name }))];
   return (
-    <div style={{ position: "absolute", left: 12, top: 12, display: "flex", flexWrap: "wrap", gap: 6, maxWidth: "calc(100% - 330px)" }}>
+    <div style={{ position: "absolute", left: compact ? 8 : 12, top: compact ? 8 : 12, display: "flex", flexWrap: compact ? "nowrap" : "wrap", overflowX: compact ? "auto" : undefined, gap: 6, maxWidth: compact ? "calc(100% - 16px)" : "calc(100% - 330px)" }}>
       {items.map((it) => (
         <button
           key={it.id ?? "all"}
           onClick={() => setFocus(it.id)}
-          className={`rounded-lg border px-3.5 py-1.5 text-sm backdrop-blur ${
+          className={`shrink-0 whitespace-nowrap rounded-lg border backdrop-blur ${compact ? "px-2.5 py-1 text-xs" : "px-3.5 py-1.5 text-sm"} ${
             focus === it.id ? "border-white/40 bg-white/15 text-white" : "border-white/10 bg-black/40 text-white/60 hover:text-white"
           }`}
         >
@@ -683,10 +685,12 @@ function ViewChips({ res }: { res: GravityResult }) {
 export function ZoomButtons() {
   const zoomBy = usePlayer((s) => s.zoomBy);
   const fit = usePlayer((s) => s.fit);
-  const btn =
-    "flex h-12 w-12 items-center justify-center rounded-xl border border-white/20 bg-black/60 text-2xl text-white backdrop-blur hover:bg-white/15";
+  const compact = useCompact();
+  const btn = compact
+    ? "flex h-9 w-9 items-center justify-center rounded-lg border border-white/20 bg-black/60 text-lg text-white backdrop-blur"
+    : "flex h-12 w-12 items-center justify-center rounded-xl border border-white/20 bg-black/60 text-2xl text-white backdrop-blur hover:bg-white/15";
   return (
-    <div style={{ position: "absolute", right: 16, bottom: 16, display: "flex", flexDirection: "column", gap: 8 }}>
+    <div style={{ position: "absolute", right: compact ? 8 : 16, bottom: compact ? 8 : 16, display: "flex", flexDirection: "column", gap: compact ? 6 : 8 }}>
       <button className={btn} onClick={() => zoomBy(1 / 1.5)} title="Zoom in (+)">+</button>
       <button className={btn} onClick={() => zoomBy(1.5)} title="Zoom out (−)">−</button>
       <button className={btn.replace("text-2xl", "text-sm font-semibold")} onClick={fit} title="Fit everything (F)">Fit</button>
