@@ -18,11 +18,11 @@ const GravityScene = dynamic(() => import("@/components/GravityScene"), { ssr: f
 const SceneView = dynamic(() => import("@/components/SceneView"), { ssr: false });
 
 const EXAMPLES = [
-  "What if a 300 m asteroid hit London?",
   "What if the Moon were twice as close?",
   "What if a rogue planet hit Earth?",
   "What if our solar system had four suns?",
   "Could we travel back in time?",
+  "What if the Sun suddenly disappeared?",
 ];
 
 export default function Home() {
