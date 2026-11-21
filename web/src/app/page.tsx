@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import AmbientMusic from "@/components/AmbientMusic";
 import AnswerPanel from "@/components/AnswerPanel";
 import LoadingFacts from "@/components/LoadingFacts";
+import DescendLauncher from "@/components/DescendLauncher";
 import PhaseBadge from "@/components/PhaseBadge";
 import PlayRail, { GRAVITY_SPEEDS, SCENE_SPEEDS } from "@/components/PlayRail";
 import SceneTimeline from "@/components/SceneTimeline";
@@ -161,6 +162,7 @@ export default function Home() {
                 <PlayRail speeds={result.engine === "gravity" ? GRAVITY_SPEEDS : SCENE_SPEEDS} last={result.times.length - 1} />
               )}
               {result && result.engine !== "none" && <PhaseBadge times={result.times} change={result.change} />}
+              {result && result.engine !== "none" && <DescendLauncher result={result} />}
               {loadingOverlay}
             </section>
             {result && result.engine !== "none" && (

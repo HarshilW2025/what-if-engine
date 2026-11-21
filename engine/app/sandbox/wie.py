@@ -582,3 +582,97 @@ def passages(t, r, merge_radius=None):
         "closest_t": float(t[ic]), "closest_r": float(r[ic]), "merge_t": merge_t,
         "run_too_short": bool(ic == r.size - 1 and d[-1] < 0 and merge_t is None),
     }
+
+
+# ---------- atmospheric entry (Collins, Melosh and Marcus 2005, Earth Impact Effects Program) ----------
+ENTRY_ATMOSPHERES = {  # surface density kg/m^3, scale height m, radius m, surface gravity m/s^2
+    "earth": (1.225, 8000.0, 6.371e6, 9.81),
+    "mars": (0.020, 11100.0, 3.3895e6, 3.71),
+    "venus": (65.0, 15900.0, 6.0518e6, 8.87),
+    "titan": (5.3, 21000.0, 2.5747e6, 1.352),
+}
+
+
+def entry(diameter_m, velocity_kms, angle_deg=45.0, density=3000.0, planet="earth", strength_pa=None,
+          drag_coeff=2.0, spread_factor=7.0, n=300):
+    """Atmospheric entry of an asteroid or meteor: drag, gravity, curved flight path, breakup when air pressure
+    exceeds the body's strength, then pancake spreading until it bursts. Benchmarked on Chelyabinsk and Tunguska.
+    angle_deg is from the horizontal. planet is earth, mars, venus or titan, or a tuple
+    (surface density kg/m^3, scale height m, radius m, gravity m/s^2).
+    Returns outcome ("airburst", "ground impact" or "skips back to space"), arrays t_s, alt_km, speed_kms, size_m,
+    ke_mt (kinetic energy left, megatons TNT), deposit_mt_per_km, and breakup_alt_km, burst_alt_km,
+    impact_speed_kms, energy_mt, air_energy_mt, impact_energy_mt, peak_deposit_alt_km, strength_pa."""
+    rho0, H, R, g0 = ENTRY_ATMOSPHERES[planet.lower()] if isinstance(planet, str) else planet
+    L0 = float(diameter_m)
+    rho_i = float(density)
+    Y = float(strength_pa) if strength_pa is not None else 10 ** (2.107 + 0.0624 * math.sqrt(rho_i))
+    m = rho_i * math.pi * L0**3 / 6
+    z_top = 12 * H
+    MT = 4.184e15
+
+    def deriv(s, broken):
+        v, th, z, L, dL = s
+        rho_a = rho0 * math.exp(-max(z, 0.0) / H)
+        g = g0 * (R / (R + z)) ** 2
+        A = math.pi * L * L / 4
+        dv = -drag_coeff * rho_a * A * v * v / (2 * m) + g * math.sin(th)
+        dth = g * math.cos(th) / v - v * math.cos(th) / (R + z)
+        dz = -v * math.sin(th)
+        ddL = drag_coeff * rho_a * v * v / (rho_i * L) if broken else 0.0
+        return np.array([dv, dth, dz, dL if broken else 0.0, ddL])
+
+    s = np.array([velocity_kms * 1000.0, math.radians(angle_deg), z_top, L0, 0.0])
+    t, broken = 0.0, False
+    T, S = [0.0], [s.copy()]
+    breakup_z = burst_z = None
+    outcome = None
+    while True:
+        v, th, z, L, dL = s
+        dt = min(0.002 * H / max(v * abs(math.sin(th)), 1.0), 0.05)
+        if broken:
+            dt = min(dt, 0.05 * L / max(abs(dL), 1e-9))
+        k1 = deriv(s, broken)
+        k2 = deriv(s + 0.5 * dt * k1, broken)
+        k3 = deriv(s + 0.5 * dt * k2, broken)
+        k4 = deriv(s + dt * k3, broken)
+        s = s + dt / 6 * (k1 + 2 * k2 + 2 * k3 + k4)
+        t += dt
+        v, th, z, L, dL = s
+        rho_a = rho0 * math.exp(-max(z, 0.0) / H)
+        if not broken and rho_a * v * v >= Y:
+            broken, breakup_z = True, z
+        if broken and L >= spread_factor * L0 and z > 0:
+            burst_z, outcome = z, "airburst"
+        if z <= 0:
+            outcome = outcome or "ground impact"
+            s[2] = 0.0
+        if z > z_top * 1.01:
+            outcome = "skips back to space"
+        T.append(t)
+        S.append(s.copy())
+        if outcome or v < 1.0 or t > 3600:
+            outcome = outcome or "ground impact"
+            break
+    T = np.array(T)
+    S = np.array(S)
+    ke = 0.5 * m * S[:, 0] ** 2 / MT
+    grid = np.linspace(0, T[-1], n)
+    alt = np.interp(grid, T, S[:, 2]) / 1000
+    spd = np.interp(grid, T, S[:, 0]) / 1000
+    size = np.interp(grid, T, S[:, 3])
+    kei = np.interp(grid, T, ke)
+    dz = -np.diff(alt)
+    dep = np.concatenate([[0.0], np.where(dz > 1e-3, np.maximum(-np.diff(kei), 0.0) / np.maximum(dz, 1e-3), 0.0)])
+    e0 = float(ke[0])
+    ground = outcome == "ground impact"
+    air = max(e0 - float(ke[-1]), 0.0) if ground else e0
+    peak = float(alt[int(np.argmax(dep))]) if dep.max() > 0 and (not ground or air > 0.01 * e0) else None
+    return {
+        "outcome": outcome, "t_s": grid, "alt_km": alt, "speed_kms": spd, "size_m": size, "ke_mt": kei,
+        "deposit_mt_per_km": dep,
+        "breakup_alt_km": None if breakup_z is None else breakup_z / 1000,
+        "burst_alt_km": None if burst_z is None else burst_z / 1000,
+        "impact_speed_kms": float(S[-1, 0] / 1000) if ground else None,
+        "energy_mt": e0, "air_energy_mt": air, "impact_energy_mt": float(ke[-1]) if ground else 0.0,
+        "peak_deposit_alt_km": peak, "strength_pa": Y,
+    }
