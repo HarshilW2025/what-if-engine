@@ -143,7 +143,14 @@ def ask(question: str, progress=None, hint: dict | None = None) -> dict:
                 if res.get("engine") == "gravity":
                     from app.ai.reviewer import orbit_check, review_orbits
                     report("verify", "An independent reviewer is auditing the setup")
-                    rev = review_orbits(client, MODEL, question, block.input, res)
+                    from app.ai.earth import earth_from_orbits
+                    from app.ai.reviewer import fallback_answer, ground_text, orbit_numbers
+                    res["earth"] = earth_from_orbits(res)
+                    res["numbers"] = orbit_numbers(res)
+                    rev = review_orbits(client, MODEL, question, block.input, res, res["numbers"])
+                    res["answer"] = ((rev or {}).get("answer") or "").strip() or fallback_answer(res["numbers"])
+                    res["explanation"] = ((rev or {}).get("explanation") or "").strip()
+                    res.setdefault("diagnostics", {})["grounding"] = ground_text(res["answer"], res["numbers"])
                     if rev is not None:
                         meta["review"] = rev
                         chk = orbit_check(rev)
@@ -166,6 +173,21 @@ def ask(question: str, progress=None, hint: dict | None = None) -> dict:
                 if not any(str(c.get("name", "")).lower().startswith("baseline") for c in scene["diagnostics"]["checks"]):
                     miss = {"name": "No reality baseline: add an s.check named 'Baseline: ...' that runs the same physics with today's real inputs and compares it to a measured value",
                             "value": 0.0, "expected": 1.0, "rtol": 0.0, "atol": 0.0, "passed": False, "source": "baseline"}
+                    scene["diagnostics"]["checks"].append(miss)
+                    failed.append(miss)
+                import re
+                if not str(scene.get("explanation", "")).strip():
+                    miss = {"name": "No detailed explanation: call s.explain(text) with the laws by name, the key equations and the calculation step by step",
+                            "value": 0.0, "expected": 1.0, "rtol": 0.0, "atol": 0.0, "passed": False, "source": "format"}
+                    scene["diagnostics"]["checks"].append(miss)
+                    failed.append(miss)
+                _earthy = bool(re.search(r"\bearth\b", question, re.I)) or any(b.get("kind") == "earth" or "earth" in str(b.get("name", "")).lower() for b in scene.get("bodies", []))
+                _related = _earthy or bool(re.search(r"\b(we|us|our|people|humans?|life|world|sun|moon|sky|oceans?|seas?|cities|solar system)\b", question, re.I))
+                if not _related:
+                    scene["earth"] = None  # far away events with no link to Earth never show the panel
+                if _earthy and not (scene.get("earth") or {}).get("series"):
+                    miss = {"name": "Nothing about people on Earth: add 2 to 4 s.on_earth quantities and 3 to 6 s.earth_event moments showing what people would feel and see",
+                            "value": 0.0, "expected": 1.0, "rtol": 0.0, "atol": 0.0, "passed": False, "source": "format"}
                     scene["diagnostics"]["checks"].append(miss)
                     failed.append(miss)
                 if m.tier == "theory" and m.theories:

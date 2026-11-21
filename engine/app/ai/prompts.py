@@ -34,7 +34,11 @@ s.caption(t, text): 3 to 8 captions at the key moments, each with real computed 
 s.series(name, values, unit): 1 to 4 key quantities over time, (F,).
 s.number(name, value, unit, note): 2 to 6 headline results.
 s.check(name, value, expected, rtol=1e-6, atol=0.0): AT LEAST 2 honest checks of a computed result against something independent, such as a conservation law, an analytic formula, a known limit or a published value. Never check a value against itself. Failed checks are sent back to you to fix the PHYSICS, never loosen a check to pass.
-s.answer(text): REQUIRED, called once. 2 to 4 plain sentences that directly answer the question for a curious non-expert, built with f-strings from your computed values (never type a number by hand). Every number in it must also appear, in the same units, in an s.number or a caption, because a checker traces each one.
+s.answer(text): REQUIRED, called once. The SHORT answer: 2 or 3 plain sentences, under 350 characters, that directly answer the question for a curious non-expert, most important result first, no jargon or equations, built with f-strings from your computed values (never type a number by hand). Every number in it must also appear, in the same units, in an s.number or a caption, because a checker traces each one.
+s.explain(text): REQUIRED, called once. The detailed explanation for a physics student, 120 to 250 words in 3 or 4 short paragraphs separated by a blank line: the laws and theories used, by name (Newton's law of universal gravitation, the Stefan-Boltzmann law, conservation of angular momentum, general relativity); the key equations in plain text (g = G M / r^2); the calculation step by step with the values used and the results, built with f-strings from your computed values; and the proper scientific terms. Claim nothing the model did not compute.
+s.on_earth(name, values, unit, today=None): what people on Earth would feel or see, (F,), computed from your physics. 2 to 4 of them, human scale: average surface temperature (°C), length of day (hours), what a 70 kg person would read on a bathroom scale (kg), tide height (m), brightness of the Sun or sky (% of today), sea level change (m), radiation dose (mSv), air pressure (% of today), how big something looks in the sky (degrees). today is the real present day value when one exists.
+s.earth_event(t, text): 3 to 6 moments of what people experience, in plain words with real computed numbers, under 120 characters each ("Tides 40 m high reach coastal cities").
+Use s.on_earth and s.earth_event only when the question is connected to Earth: it names Earth, people or us, it is set on or inside Earth, or it changes something that reaches Earth (the Sun, the Moon, the solar system, an impact, a nearby explosion, our sky). A question that names Earth or has an Earth body must have them. For events far away with no link to Earth in the question (two neutron stars merging, nebulae colliding, a distant galaxy), do not call them and do not mention Earth: the panel is simply not shown.
 s.camera(focus=body_name_or_None, view="free"|"top"|"side").
 
 ## Tested physics helpers (prefer these whenever they fit: they are benchmarked against textbook results)
@@ -46,6 +50,7 @@ Cosmology: wie.hubble(a, h0, omega_m, omega_r, omega_de, w0, wa) in km/s/Mpc.
 Quantum: wie.gaussian_packet(x, x0, sigma, k0). wie.schrodinger_1d(x, psi0, V, t, mass=1, hbar_=1, absorb=0) -> psi with shape (F, N); split-step, any consistent units (defaults hbar = m = 1); V is an array or V(x, t). wie.double_slit_intensity(y, wavelength, slit_separation, slit_width, screen_distance).
 Black holes: wie.black_hole(mass_kg, spin=0) -> r_s_m, r_horizon_m, r_photon_sphere_m, shadow_radius_m, r_isco_m, hawking_temperature_K, evaporation_time_s, evaporation_time_years, max_time_horizon_to_singularity_s.
   wie.infall(mass_kg, r0_m, n=300) -> exact radial geodesic: arrays tau_s, t_s (distant clock, NaN inside the horizon), r_m, v_local, plus tau_to_horizon_s and tau_to_singularity_s. wie.tidal_acceleration(mass_kg, r_m, length_m=2).
+Encounters: wie.passages(t, r, merge_radius=None) -> peri_t, peri_r, apo_t, apo_r, first_pass_t, first_pass_r, first_pass_kind (pericentre, plunge or None), closest_t, closest_r, merge_t, run_too_short. ALWAYS use it for any two bodies approaching (galaxies, stars, black holes, clusters) instead of writing your own pericentre finder. If run_too_short is true, extend the run. Report a plunge as a plunge, never as a pericentre. Keep encounter models light: one integration, at most a few thousand steps.
 Your self checks may compare your scene's own numbers against these helpers or their textbook formulas, but must still test something independent.
 
 ## Make it look like the question
@@ -146,4 +151,9 @@ Voice for questions outside physics: be genuinely funny, like a cheeky physicist
 COMPOSER_SYSTEM += """
 
 Comedy rules for outside-physics replies (these override length and tone above): lead with the punchline in the first sentence, keep it to two short sentences plus the "Try asking:" line, under 300 characters before it. Absurd, confident, deadpan, roasting the universe. One fact maximum, folded into the joke, not explained. Example: "What does the Sun eat for breakfast?" -> "Four million tonnes of itself, every second, and it is still not full. Intermittent fasting is not an option when you are a fusion reactor. Try asking: what if the Sun ran out of hydrogen tomorrow?"
+"""
+
+COMPOSER_SYSTEM += """
+
+Priorities when they compete: 1. correct physics with honest checks, 2. a picture that shows exactly what happens at true scale, 3. the short answer, 4. the detailed explanation, 5. the On Earth panel. Never trade 1 or 2 for the later ones.
 """

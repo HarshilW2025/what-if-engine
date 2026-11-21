@@ -10,6 +10,7 @@ import { fmt } from "@/lib/fmt";
 import { usePlayer } from "@/lib/store";
 import type { Num, SceneBody, SceneCloud, SceneCurve, SceneResult } from "@/lib/types";
 import { ZoomButtons, ZoomInput } from "./GravityScene";
+import OnEarth from "./OnEarth";
 import { BlackHoleVisual } from "./scene/blackHole";
 import { CompactStar, compactKind } from "./scene/compact";
 import { Ring, Safe, lookFor, type Look } from "./scene/looks";
@@ -795,11 +796,13 @@ function Spark({ s, i }: { s: SceneResult["series"][number]; i: number }) {
 
 function SeriesPanel({ res }: { res: SceneResult }) {
   const playhead = usePlayer((s) => s.playhead);
-  if (!res.series.length) return null;
+  const earth = res.earth && (res.earth.series.length > 0 || res.earth.events.length > 0) ? res.earth : null;
+  if (!res.series.length && !earth) return null;
   const { i } = cursor(res.times.length, Math.round(playhead));
   return (
-    <div style={{ position: "absolute", right: 12, top: 12, width: 230, display: "flex", flexDirection: "column", gap: 8 }}>
-      {res.series.slice(0, 4).map((s) => (
+    <div style={{ position: "absolute", right: 12, top: 12, width: 288, maxHeight: "calc(100% - 200px)", overflowY: "auto", display: "flex", flexDirection: "column", gap: 8 }}>
+      {earth && <OnEarth earth={earth} times={res.times} unit={res.time_unit} />}
+      {res.series.slice(0, earth ? 2 : 4).map((s) => (
         <Spark key={s.name} s={s} i={i} />
       ))}
     </div>
@@ -811,12 +814,12 @@ function ViewChips({ res }: { res: SceneResult }) {
   const setFocus = usePlayer((s) => s.setFocus);
   const items = [{ id: null as number | null, name: "All" }, ...res.bodies.map((b, k) => ({ id: k as number | null, name: b.name, kind: b.kind })).filter((x) => !("kind" in x) || !POINTLIKE.has(x.kind as string)).slice(0, MAX_LABELS)];
   return (
-    <div style={{ position: "absolute", left: 12, top: 12, display: "flex", flexWrap: "wrap", gap: 6, maxWidth: "60%" }}>
+    <div style={{ position: "absolute", left: 12, top: 12, display: "flex", flexWrap: "wrap", gap: 6, maxWidth: "calc(100% - 330px)" }}>
       {items.map((it) => (
         <button
           key={it.id ?? "all"}
           onClick={() => setFocus(it.id)}
-          className={`rounded-md border px-2.5 py-1 text-[11px] backdrop-blur ${focus === it.id ? "border-white/40 bg-white/15 text-white" : "border-white/10 bg-black/40 text-white/60 hover:text-white"}`}
+          className={`rounded-lg border px-3.5 py-1.5 text-sm backdrop-blur ${focus === it.id ? "border-white/40 bg-white/15 text-white" : "border-white/10 bg-black/40 text-white/60 hover:text-white"}`}
         >
           {it.name}
         </button>
@@ -880,7 +883,7 @@ export default function SceneView({ res }: { res: SceneResult }) {
               tags.current[k] = el;
             }}
             style={{ position: "absolute", left: 0, top: 0, display: "none" }}
-            className="select-none whitespace-nowrap text-[11px] font-medium text-white/75 [text-shadow:0_0_6px_rgba(0,0,0,0.9)]"
+            className="select-none whitespace-nowrap text-[13px] font-medium text-white/85 [text-shadow:0_0_6px_rgba(0,0,0,0.9)]"
           >
             {b.name}
           </span>

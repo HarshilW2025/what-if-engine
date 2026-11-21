@@ -1,5 +1,6 @@
 "use client";
 
+import OnEarth from "./OnEarth";
 import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { Bloom, EffectComposer, ToneMapping, Vignette } from "@react-three/postprocessing";
@@ -652,12 +653,12 @@ function ViewChips({ res }: { res: GravityResult }) {
   const setFocus = usePlayer((s) => s.setFocus);
   const items: { id: number | null; name: string }[] = [{ id: null, name: "All" }, ...res.bodies.slice(0, MAX_LABELS).map((b) => ({ id: b.id, name: b.name }))];
   return (
-    <div style={{ position: "absolute", left: 12, top: 12, display: "flex", flexWrap: "wrap", gap: 6, maxWidth: "75%" }}>
+    <div style={{ position: "absolute", left: 12, top: 12, display: "flex", flexWrap: "wrap", gap: 6, maxWidth: "calc(100% - 330px)" }}>
       {items.map((it) => (
         <button
           key={it.id ?? "all"}
           onClick={() => setFocus(it.id)}
-          className={`rounded-md border px-2.5 py-1 text-[11px] backdrop-blur ${
+          className={`rounded-lg border px-3.5 py-1.5 text-sm backdrop-blur ${
             focus === it.id ? "border-white/40 bg-white/15 text-white" : "border-white/10 bg-black/40 text-white/60 hover:text-white"
           }`}
         >
@@ -672,12 +673,12 @@ export function ZoomButtons() {
   const zoomBy = usePlayer((s) => s.zoomBy);
   const fit = usePlayer((s) => s.fit);
   const btn =
-    "flex h-8 w-8 items-center justify-center rounded-md border border-white/15 bg-black/50 text-sm text-white/80 backdrop-blur hover:bg-white/10";
+    "flex h-12 w-12 items-center justify-center rounded-xl border border-white/20 bg-black/60 text-2xl text-white backdrop-blur hover:bg-white/15";
   return (
-    <div style={{ position: "absolute", right: 12, bottom: 12, display: "flex", flexDirection: "column", gap: 6 }}>
+    <div style={{ position: "absolute", right: 16, bottom: 16, display: "flex", flexDirection: "column", gap: 8 }}>
       <button className={btn} onClick={() => zoomBy(1 / 1.5)} title="Zoom in (+)">+</button>
       <button className={btn} onClick={() => zoomBy(1.5)} title="Zoom out (−)">−</button>
-      <button className={`${btn} text-[10px]`} onClick={fit} title="Fit everything (F)">Fit</button>
+      <button className={btn.replace("text-2xl", "text-sm font-semibold")} onClick={fit} title="Fit everything (F)">Fit</button>
     </div>
   );
 }
@@ -743,12 +744,17 @@ export default function GravityScene({ res }: { res: GravityResult }) {
               tags.current[b.id] = el;
             }}
             style={{ position: "absolute", left: 0, top: 0, display: "none" }}
-            className="select-none whitespace-nowrap text-[11px] font-medium text-white/75 [text-shadow:0_0_6px_rgba(0,0,0,0.9)]"
+            className="select-none whitespace-nowrap text-[13px] font-medium text-white/85 [text-shadow:0_0_6px_rgba(0,0,0,0.9)]"
           />
         ))}
       </div>
 
       <ViewChips res={res} />
+      {res.earth && (res.earth.series.length > 0 || res.earth.events.length > 0) && (
+        <div style={{ position: "absolute", right: 12, top: 12, maxHeight: "calc(100% - 200px)", overflowY: "auto" }}>
+          <OnEarth earth={res.earth} times={res.times} unit="yr" />
+        </div>
+      )}
       <ZoomButtons />
     </div>
   );

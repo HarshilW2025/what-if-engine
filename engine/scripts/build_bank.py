@@ -31,8 +31,9 @@ def main() -> None:
     ap.add_argument("--budget", type=float, required=True, help="stop starting new questions once this many USD are spent")
     ap.add_argument("--workers", type=int, default=6)
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--questions", nargs="*", default=None, help="bank these questions instead of the list")
     a = ap.parse_args()
-    todo = [q for q in QUESTIONS if not bank.has(q)]
+    todo = [q for q in (a.questions or QUESTIONS) if not bank.has(q)]
     if a.limit:
         todo = todo[: a.limit]
     print(f"Bank has {len(bank.load())} entries; {len(todo)} questions to try; budget ${a.budget:.2f}\n", flush=True)

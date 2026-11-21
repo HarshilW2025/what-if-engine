@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import AmbientMusic from "@/components/AmbientMusic";
 import AnswerPanel from "@/components/AnswerPanel";
 import LoadingFacts from "@/components/LoadingFacts";
+import PlayRail, { GRAVITY_SPEEDS, SCENE_SPEEDS } from "@/components/PlayRail";
 import SceneTimeline from "@/components/SceneTimeline";
 import Timeline from "@/components/Timeline";
 import { askWithProgress } from "@/lib/api";
@@ -155,6 +156,9 @@ export default function Home() {
                   </div>
                 </div>
               ) : null}
+              {result && result.engine !== "none" && (
+                <PlayRail speeds={result.engine === "gravity" ? GRAVITY_SPEEDS : SCENE_SPEEDS} last={result.times.length - 1} />
+              )}
               {loadingOverlay}
             </section>
             {result && result.engine !== "none" && (

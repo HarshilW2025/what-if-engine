@@ -147,6 +147,8 @@ def replay(entry: dict, asked: str) -> dict:
         from app.ai.composer import ScenarioSpec, run_spec
         from app.ai.reviewer import fallback_answer, ground_text, orbit_numbers
         result = run_spec(ScenarioSpec.model_validate(spec))["result"]
+        from app.ai.earth import earth_from_orbits
+        result["earth"] = earth_from_orbits(result)
         result["numbers"] = orbit_numbers(result)
         result["answer"] = entry.get("answer") or fallback_answer(result["numbers"])
         result.setdefault("diagnostics", {})["grounding"] = ground_text(result["answer"], result["numbers"])

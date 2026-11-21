@@ -32,6 +32,7 @@ export default function AnswerPanel({ resp }: { resp: SimResponse }) {
   const review = checks.find((c) => c.name.startsWith("Independent review"));
   const grounding = result.diagnostics.grounding;
   const assumptions = spec.assumptions ?? [];
+  const explanation = result.explanation?.trim() ?? "";
 
   return (
     <div className="space-y-6 text-sm">
@@ -51,7 +52,7 @@ export default function AnswerPanel({ resp }: { resp: SimResponse }) {
       </div>
 
       <Section title="Answer">
-        <p className="leading-relaxed text-zinc-100">{result.answer || "The simulation ran; the computed results are below."}</p>
+        <p className="text-[15px] leading-relaxed text-zinc-100">{result.answer || "The simulation ran; the computed results are below."}</p>
         {grounding && grounding.numbers > 0 && (
           <p className={`mt-2 text-[11px] ${grounding.ungrounded.length ? "text-amber-300" : "text-emerald-400"}`}>
             {grounding.ungrounded.length ? `⚠ ${grounding.ungrounded.length} number(s) not traced to the computation` : "✓ Every number here is traced to the computation"}
@@ -74,6 +75,16 @@ export default function AnswerPanel({ resp }: { resp: SimResponse }) {
           </ul>
         )}
       </Section>
+
+      {explanation && (
+        <Section title="Detailed explanation">
+          <div className="space-y-2.5 leading-relaxed text-zinc-300">
+            {explanation.split(/\n\s*\n/).map((para, k) => (
+              <p key={k}>{para.trim()}</p>
+            ))}
+          </div>
+        </Section>
+      )}
 
       <Section title="Computed results">
         {numbers.length ? (

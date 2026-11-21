@@ -213,6 +213,37 @@ class Scene:
         self._answer = str(text)[:900]
         return self
 
+    def explain(self, text):
+        """The detailed explanation: laws and theories by name, key equations, the calculation step by step, proper terms."""
+        self._explanation = str(text)[:5000]
+        return self
+
+    def on_earth(self, name, values, unit="", today=None):
+        """What people on Earth would feel or see over time, values () or (F,). today is the real present day value."""
+        if not hasattr(self, "_earth"):
+            self._earth = []
+        if len(self._earth) >= 4:
+            return self  # forgiving: the panel shows four
+        td = None if today is None else float(today)
+        if td is not None and not math.isfinite(td):
+            td = None
+        self._earth.append({"name": str(name)[:40], "unit": str(unit)[:20], "values": self._frames(values, f"on_earth {name}", ()), "today": td})
+        return self
+
+    def earth_event(self, t, text):
+        """A moment in what people on Earth experience, in plain words with computed numbers."""
+        if not hasattr(self, "_earth_events"):
+            self._earth_events = []
+        t = float(min(max(float(t), float(self.t[0])), float(self.t[-1])))
+        self._earth_events.append({"t": t, "text": str(text)[:160]})
+        return self
+
+    def _earth_out(self):
+        se, ev = getattr(self, "_earth", []), getattr(self, "_earth_events", [])
+        if not se and not ev:
+            return None
+        return {"series": [{**s, "values": _q(s["values"])} for s in se], "events": sorted(ev, key=lambda x: x["t"])[:8], "note": ""}
+
     def camera(self, focus=None, view="free"):
         if view not in VIEWS:
             raise ValueError(f"view must be one of {VIEWS}")
@@ -263,6 +294,8 @@ class Scene:
             "checks": self._checks,
             "camera": self._camera,
             "answer": getattr(self, "_answer", ""),
+            "explanation": getattr(self, "_explanation", ""),
+            "earth": self._earth_out(),
         }
 
 
@@ -493,4 +526,52 @@ def infall(mass_kg, r0_m, n=300):
         "tau_s": tau, "t_s": np.where(outside, tt, np.nan), "r_m": r, "v_local": np.where(outside, v, np.nan),
         "tau_to_horizon_s": float(np.sqrt(r0**3 / (8 * M)) * (eta_h + np.sin(eta_h)) / c),
         "tau_to_singularity_s": float(np.pi * np.sqrt(r0**3 / (8 * M)) / c),
+    }
+
+
+def passages(t, r, merge_radius=None):
+    """Close passes of two bodies from their separation r(t): real pericentres (jitter filtered out),
+    apocentres, merger time, and whether the run ended too early. Works for stars, black holes, galaxies.
+    Returns peri_t, peri_r, apo_t, apo_r (lists), first_pass_t, first_pass_r, first_pass_kind
+    ("pericentre", "plunge" or None), closest_t, closest_r, merge_t (r stays below merge_radius to the end, else None),
+    run_too_short (still approaching at the last step with no merger)."""
+    t = np.asarray(t, dtype=float).ravel()
+    r = np.asarray(r, dtype=float).ravel()
+    if t.shape != r.shape or t.size < 3:
+        raise ValueError("passages: t and r must be 1-D arrays of the same length, at least 3")
+    ok = np.isfinite(r) & np.isfinite(t)
+    t, r = t[ok], r[ok]
+    if t.size < 3:
+        raise ValueError("passages: fewer than 3 finite samples")
+    d = np.sign(np.diff(r))
+    for k in range(1, d.size):
+        if d[k] == 0:
+            d[k] = d[k - 1]
+    mins = [k for k in range(1, d.size) if d[k - 1] < 0 and d[k] > 0]
+    maxs = [k for k in range(1, d.size) if d[k - 1] > 0 and d[k] < 0]
+    merge_t = None
+    if merge_radius is not None and r[-1] <= merge_radius:
+        above = np.where(r > merge_radius)[0]
+        merge_t = float(t[above[-1] + 1]) if above.size else float(t[0])
+    peri = []
+    for j, k in enumerate(mins):  # keep only real minima: at least 2% below the peaks on both sides
+        lo = peri[-1] if peri else 0
+        hi = mins[j + 1] if j + 1 < len(mins) else r.size - 1
+        left, right = r[lo:k + 1].max(), r[k:hi + 1].max()
+        if r[k] < 0.98 * min(left, right) and (merge_t is None or t[k] < merge_t):
+            peri.append(k)
+    apo = [k for k in maxs if (not peri or k > peri[0]) and (merge_t is None or t[k] < merge_t)]
+    ic = int(np.argmin(r))
+    if peri:
+        first_t, first_r, kind = float(t[peri[0]]), float(r[peri[0]]), "pericentre"
+    elif merge_t is not None:
+        first_t, first_r, kind = merge_t, float(r[np.searchsorted(t, merge_t)]), "plunge"
+    else:
+        first_t, first_r, kind = None, None, None
+    return {
+        "peri_t": [float(t[k]) for k in peri], "peri_r": [float(r[k]) for k in peri],
+        "apo_t": [float(t[k]) for k in apo], "apo_r": [float(r[k]) for k in apo],
+        "first_pass_t": first_t, "first_pass_r": first_r, "first_pass_kind": kind,
+        "closest_t": float(t[ic]), "closest_r": float(r[ic]), "merge_t": merge_t,
+        "run_too_short": bool(ic == r.size - 1 and d[-1] < 0 and merge_t is None),
     }

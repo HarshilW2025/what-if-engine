@@ -62,6 +62,8 @@ export interface GravityResult {
   events: MergeEvent[];
   diagnostics: GravityDiagnostics;
   answer?: string;
+  explanation?: string;
+  earth?: EarthPanel | null;
   numbers?: { name: string; value: number; unit: string; note: string }[];
 }
 
@@ -123,6 +125,8 @@ export interface SceneResult {
   numbers: { name: string; value: number; unit: string; note: string }[];
   camera: { focus: string | null; view: "free" | "top" | "side" };
   answer?: string;
+  explanation?: string;
+  earth?: EarthPanel | null;
   diagnostics: { runtime_s: number; checks: SceneCheck[]; log: string; grounding?: { numbers: number; ungrounded: number[] } };
 }
 
@@ -143,4 +147,17 @@ export interface SimResponse {
   spec: ScenarioSpec;
   result: EngineResult;
   meta?: AskMeta;
+}
+
+export interface EarthSeries {
+  name: string;
+  unit: string;
+  values: (number | null)[];
+  today?: number | null;
+}
+
+export interface EarthPanel {
+  series: EarthSeries[];
+  events: { t: number; text: string }[];
+  note?: string;
 }
