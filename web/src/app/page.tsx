@@ -83,7 +83,7 @@ export default function Home() {
         onChange={(e) => setQuestion(e.target.value)}
         maxLength={500}
         autoFocus={big}
-        placeholder="Ask any physics or cosmology what if…"
+        placeholder="Ask any cosmology what if…"
         className={
           big
             ? "min-w-0 flex-1 bg-transparent px-4 py-3 text-lg text-white placeholder:text-zinc-500 focus:outline-none"

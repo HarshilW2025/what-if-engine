@@ -7,7 +7,7 @@ const grotesk = Space_Grotesk({ variable: "--font-grotesk", subsets: ["latin"] }
 
 export const metadata: Metadata = {
   title: "Spaced Out",
-  description: "Ask any physics or cosmology what if and watch it simulated.",
+  description: "Ask any cosmology what if and watch it simulated.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
