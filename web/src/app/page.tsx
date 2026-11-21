@@ -17,6 +17,14 @@ import { usePlayer } from "@/lib/store";
 const GravityScene = dynamic(() => import("@/components/GravityScene"), { ssr: false });
 const SceneView = dynamic(() => import("@/components/SceneView"), { ssr: false });
 
+const EXAMPLES = [
+  "What if a 300 m asteroid hit London?",
+  "What if the Moon were twice as close?",
+  "What if a rogue planet hit Earth?",
+  "What if our solar system had four suns?",
+  "Could we travel back in time?",
+];
+
 export default function Home() {
   const response = usePlayer((s) => s.response);
   const runId = usePlayer((s) => s.runId);
@@ -110,6 +118,18 @@ export default function Home() {
               Ask the universe a what if. Exact physics where the equations exist; what scientists believe where they don&apos;t.
             </p>
             {askBox(true)}
+            <div className="mt-5 flex flex-wrap justify-center gap-2">
+              {EXAMPLES.map((q) => (
+                <button
+                  key={q}
+                  onClick={() => void submit(q)}
+                  disabled={loading}
+                  className="rounded-full border border-white/15 bg-black/30 px-4 py-1.5 text-sm text-zinc-300 backdrop-blur hover:bg-white/10 disabled:opacity-40"
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
             {error && <p className="mt-5 max-w-xl text-center text-sm text-rose-300">{error}</p>}
           </div>
           <p className="absolute bottom-3 left-0 right-0 z-10 text-center text-[11px] text-zinc-500">
