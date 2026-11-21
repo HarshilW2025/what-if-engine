@@ -113,10 +113,11 @@ export default function Home() {
           <div className="hero-bg absolute inset-0" aria-hidden />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(2,3,10,0.35)_0%,rgba(2,3,10,0.85)_70%,#02030a_100%)]" aria-hidden />
           <div className="relative z-10 flex h-full flex-col items-center justify-center px-6">
-            <h1 className="font-display text-5xl font-semibold tracking-tight sm:text-6xl">What If Engine</h1>
+            <h1 className="font-display text-5xl font-semibold tracking-tight sm:text-6xl">Spaced Out</h1>
             <p className="mt-3 max-w-xl text-center text-base text-zinc-300/90">
               Ask the universe a what if. Exact physics where the equations exist; what scientists believe where they don&apos;t.
             </p>
+            <p className="mt-2 text-center font-display text-lg font-bold text-amber-300">For all your space doubts</p>
             {askBox(true)}
             <div className="mt-5 flex flex-wrap justify-center gap-2">
               {EXAMPLES.map((q) => (
@@ -143,7 +144,7 @@ export default function Home() {
             <button onClick={back} className="shrink-0 rounded-lg border border-white/15 px-3 py-1.5 text-sm hover:bg-white/5">
               ← Back
             </button>
-            <span className="hidden shrink-0 font-display text-lg font-semibold tracking-tight md:block">What If Engine</span>
+            <span className="hidden shrink-0 font-display text-lg font-semibold tracking-tight md:block">Spaced Out</span>
             {askBox(false)}
           </header>
 
