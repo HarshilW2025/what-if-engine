@@ -4,6 +4,7 @@ Each entry stores the verified model (its code, or its orbit setup), its answer 
 result, so the bank fits in the repo and survives deploys. A matched entry is re-run, so the visitor still gets a
 real simulation, in seconds and with no API cost. Only answers that passed every check and the review get in.
 """
+import difflib
 import json
 import logging
 import os
@@ -65,7 +66,9 @@ def replace(entry: dict) -> None:
         lines = BANK_FILE.read_text().splitlines() if BANK_FILE.exists() else []
         keep = [l for l in lines if l.strip() and norm(json.loads(l)["question"]) != n]
         keep.append(json.dumps(entry))
-        BANK_FILE.write_text("\n".join(keep) + "\n")
+        tmp = BANK_FILE.with_suffix(".tmp")  # write then swap, so a Ctrl+C mid write can never corrupt the bank
+        tmp.write_text("\n".join(keep) + "\n")
+        tmp.replace(BANK_FILE)
     load(force=True)
 
 
@@ -97,13 +100,22 @@ def entry_from(question: str, out: dict) -> dict | None:
     return e
 
 
-def candidates(question: str, k: int = 5) -> list[tuple[dict, float]]:
+def candidates(question: str, k: int = 8) -> list[tuple[dict, float]]:
     es = load()
     if not es or _bm25 is None:
         return []
-    scores = _bm25.get_scores(_tokens(question))
+    vocab = {t for e in es for t in _tokens(e["question"])}
+    toks = [t if (t in vocab or len(t) < 4 or not t.isalpha()) else (difflib.get_close_matches(t, vocab, n=1, cutoff=0.8) or [t])[0]
+            for t in _tokens(question)]  # typo tolerant: "aseteroid" finds "asteroid"
+    scores = _bm25.get_scores(toks)
     order = sorted(range(len(es)), key=lambda i: -scores[i])[:k]
-    return [(es[i], float(scores[i])) for i in order if scores[i] > 0]
+    out = [(es[i], float(scores[i])) for i in order if scores[i] > 0]
+    if len(out) < k:  # few shared words: add the most similar questions overall
+        nq = " ".join(toks)
+        have = {id(e) for e, _ in out}
+        sim = sorted(((difflib.SequenceMatcher(None, nq, norm(e["question"])).ratio(), e) for e in es if id(e) not in have), key=lambda x: -x[0])
+        out += [(e, 0.0) for r, e in sim[: k - len(out)] if r > 0.5]
+    return out
 
 
 TRIAGE_TOOL = {
@@ -120,7 +132,7 @@ TRIAGE_TOOL = {
 }
 TRIAGE_SYSTEM = """You sort what if questions for a physics simulator.
 kind: exact = real objects and established physics; thought = real physics applied to an impossible premise (a Sun made of ice cream, an Earth shaped like a donut); theory = scientists genuinely disagree (black hole interiors, the end of the universe, before the Big Bang); outside = not physics (emotions, magic, biology, history).
-match: a banked question counts only if it asks about exactly the same scenario: the same objects, the same change and the same numbers. "Twice as close" and "twice as far" are different. "3,000 times faster" and "3 times faster" are different. When unsure, answer 0.
+match: a banked question counts only if it asks about exactly the same scenario: the same objects, the same change and the same numbers. "Twice as close" and "twice as far" are different. "3,000 times faster" and "3 times faster" are different. Spelling mistakes, casual wording and word order do not matter. If the question leaves a detail unstated (an asteroid with no size, a black hole with no mass, a star with no distance) and a banked question is the same scenario with a typical value filled in, pick it. Any detail the question does state must match. When unsure, answer 0.
 Call the triage tool."""
 
 

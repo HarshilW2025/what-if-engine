@@ -16,6 +16,7 @@ import { ZoomButtons, ZoomInput } from "./GravityScene";
 import { BlackHoleVisual } from "./scene/blackHole";
 import { CompactStar, compactKind } from "./scene/compact";
 import { Atmosphere, atmosphereFor } from "./scene/atmosphere";
+import { Person, Shuttle, craftFor } from "./scene/craft";
 import { Ring, Safe, lookFor, type Look } from "./scene/looks";
 import { MAX_STARS, PLANET_FRAG, PLANET_VERT } from "./scene/planetShaders";
 import { SKY_FRAG, SKY_VERT, STAR_FRAG, STAR_VERT } from "./scene/shaders";
@@ -357,6 +358,7 @@ function BodyView({ res, index, slots, starIdx }: { res: SceneResult; index: num
   const ahead = useMemo(() => new THREE.Vector3(), []);
   const minAngular = POINTLIKE.has(b.kind) || b.kind === "ship" ? 0.006 : 0.003;
   const look = useMemo(() => lookFor(b.name), [b.name]);
+  const craft = useMemo(() => craftFor(b.name, b.kind), [b.name, b.kind]);
   const compact = ["star", "generic", "particle", "planet", "rock"].includes(b.kind) ? compactKind(b.name) : null;
 
   const starColor = useMemo(() => {
@@ -373,9 +375,9 @@ function BodyView({ res, index, slots, starIdx }: { res: SceneResult; index: num
     if (b.kind === "star") return new THREE.SpriteMaterial({ ...base, map: glowTexture(), color: starColor.clone().multiplyScalar(1.6) });
     if (b.kind === "light") return new THREE.SpriteMaterial({ ...base, map: glowTexture(), color: new THREE.Color(b.color ?? "#fff6d8").multiplyScalar(3) });
     if (b.kind === "particle") return new THREE.SpriteMaterial({ ...base, map: glowTexture(), color: new THREE.Color(b.color ?? KIND_COLOR.particle).multiplyScalar(2) });
-    if (b.kind === "ship") return new THREE.SpriteMaterial({ ...base, map: glowTexture(), color: new THREE.Color(0.6, 1.2, 3) });
+    if (b.kind === "ship" && craft !== "person") return new THREE.SpriteMaterial({ ...base, map: glowTexture(), color: new THREE.Color(0.6, 1.2, 3) });
     return null;
-  }, [b.kind, b.color, starColor, compact]);
+  }, [b.kind, b.color, starColor, compact, craft]);
   const haloMul = b.kind === "star" ? 5 : b.kind === "blackhole" ? 3.2 : b.kind === "ship" ? 1.2 : 4;
 
   useEffect(
@@ -434,10 +436,9 @@ function BodyView({ res, index, slots, starIdx }: { res: SceneResult; index: num
       )}
       {compact && <CompactStar kind={compact} meshRef={mesh} temperature={b.temperature?.find((x) => x != null) ?? undefined} />}
       {b.kind === "blackhole" && <BlackHoleVisual groupRef={bh} disk={!!b.disk} />}
-      {b.kind === "ship" && (
+      {craft && (
         <mesh ref={mesh} rotation={[Math.PI / 2, 0, 0]}>
-          <coneGeometry args={[0.35, 1.6, 16]} />
-          <meshBasicMaterial color={b.color ?? KIND_COLOR.ship} />
+          {craft === "person" ? <Person /> : <Shuttle />}
         </mesh>
       )}
       {b.kind === "earth" && (
@@ -445,7 +446,7 @@ function BodyView({ res, index, slots, starIdx }: { res: SceneResult; index: num
           <EarthBody {...surfaceProps} />
         </Suspense>
       )}
-      {SURFACE_KINDS.has(b.kind) && b.kind !== "earth" && !compact &&
+      {SURFACE_KINDS.has(b.kind) && b.kind !== "earth" && !compact && !craft &&
         (look ? (
           <Safe fallback={<PlanetBody {...surfaceProps} textures={null} />}>
             <Suspense fallback={<PlanetBody {...surfaceProps} textures={null} />}>

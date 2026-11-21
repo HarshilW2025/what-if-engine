@@ -32,8 +32,19 @@ def main() -> None:
     ap.add_argument("--workers", type=int, default=6)
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--questions", nargs="*", default=None, help="bank these questions instead of the list")
+    ap.add_argument("--plan", action="store_true", help="demo set first, then new questions, then upgrade the rest of the bank")
     ap.add_argument("--rebuild", action="store_true", help="rebuild these questions even if banked; the new answer replaces the old only if it passes")
     a = ap.parse_args()
+    if a.plan:
+        from scripts.demo_questions import DEMO
+        a.rebuild = True
+        banked = [e["question"] for e in bank.load() if e.get("engine") != "none"]
+        seen, order = set(), []
+        for q in DEMO + [q for q in QUESTIONS if not bank.has(q)] + banked:
+            if bank.norm(q) not in seen:
+                seen.add(bank.norm(q))
+                order.append(q)
+        a.questions = order
     todo = [q for q in (a.questions or QUESTIONS) if a.rebuild or not bank.has(q)]
     if a.limit:
         todo = todo[: a.limit]
