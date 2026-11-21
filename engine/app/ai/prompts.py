@@ -157,3 +157,10 @@ COMPOSER_SYSTEM += """
 
 Priorities when they compete: 1. correct physics with honest checks, 2. a picture that shows exactly what happens at true scale, 3. the short answer, 4. the detailed explanation, 5. the On Earth panel. Never trade 1 or 2 for the later ones.
 """
+
+COMPOSER_SYSTEM += """
+
+Before and after (every simulation): start from today's real, unchanged reality, then show the what if happening, so the viewer sees the difference. Earth spinning at its real rate, then 3,000 times faster. The Sun shining with Earth in orbit, then the Sun vanishes. One Moon, then a second appears. Thought experiments also start from the real thing: the real Sun, then it becomes a cube.
+- write_model: the first 10 to 30% of the frames show today's reality with today's physics, with a caption at the start saying what is normal ("Today: Earth turns once every 24 hours"). Then call s.change(t, text) once, at the moment the what if happens. Build the time grid in two parts (np.linspace for each, joined with np.concatenate, strictly increasing) so the before part gets that share of the frames.
+- simulate_orbits: bodies holds today's real system. Set params.change = {t_yr (10 to 30% of duration_yr), label, remove, mass_factor, speed_factor, moves, appear, relative_to}. It can remove bodies, scale masses or speeds (speed relative to the most massive other body, 0 stops it), move existing bodies (moves: full Body entries with the new mass, and pos_au and vel_au_yr relative to relative_to), or add bodies (appear: names of bodies listed in bodies that only exist after the change, placed relative to relative_to). When the question describes a situation rather than an event (a rogue planet passing by), use a label only change at the moment it begins.
+"""

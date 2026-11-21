@@ -28,8 +28,8 @@ function Gauge({ s, i }: { s: EarthSeries; i: number }) {
   return (
     <div>
       <div className="flex items-baseline justify-between gap-2">
-        <span className="text-[12px] text-zinc-300">{s.name}</span>
-        <span className={`shrink-0 font-mono text-sm ${far ? "text-amber-300" : "text-white"}`}>
+        <span className="text-zinc-300">{s.name}</span>
+        <span className={`shrink-0 font-mono ${far ? "text-amber-300" : "text-zinc-100"}`}>
           {cur == null ? "n/a" : fmt(cur)} {s.unit}
         </span>
       </div>
@@ -40,7 +40,7 @@ function Gauge({ s, i }: { s: EarthSeries; i: number }) {
         {ref != null && <div className="absolute -top-1 h-3.5 w-0.5 bg-white/80" style={{ left: `${clamp((tr(ref) - a) / span) * 100}%` }} title="today" />}
       </div>
       {ref != null && (
-        <div className="mt-0.5 text-[10px] text-zinc-500">
+        <div className="mt-0.5 text-[11px] text-zinc-500">
           today: {fmt(ref)} {s.unit}
         </div>
       )}
@@ -48,31 +48,39 @@ function Gauge({ s, i }: { s: EarthSeries; i: number }) {
   );
 }
 
-/** What people on Earth feel and see, synced to the playhead. */
+/** What people on Earth feel and see, as a side panel section synced to the playhead. */
 export default function OnEarth({ earth, times, unit }: { earth: EarthPanel; times: number[]; unit: string }) {
   const playhead = usePlayer((s) => s.playhead);
   if (!earth.series.length && !earth.events.length) return null;
   const i = Math.min(times.length - 1, Math.max(0, Math.round(playhead)));
   const now = times[i];
-  const cur = earth.events.filter((e) => e.t <= now + 1e-9 * Math.max(1, Math.abs(now))).at(-1);
+  const eps = 1e-9 * Math.max(1, Math.abs(now));
+  const curIdx = earth.events.reduce((k, e, j) => (e.t <= now + eps ? j : k), -1);
   return (
-    <div className="w-72 rounded-xl border border-sky-300/25 bg-black/65 p-3 backdrop-blur">
-      <div className="mb-2 flex items-center gap-2">
-        <span className="h-2.5 w-2.5 rounded-full bg-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.9)]" />
-        <span className="font-display text-xs font-semibold uppercase tracking-[0.16em] text-sky-300">On Earth</span>
-      </div>
-      {cur && (
-        <div key={cur.text} className="mb-3 rounded-lg bg-sky-400/10 px-2.5 py-2 text-[13px] leading-snug text-white">
-          <span className="mr-1.5 font-mono text-[11px] text-sky-300">{when(cur.t, unit)}</span>
-          {cur.text}
+    <div className="space-y-4">
+      {earth.events.length > 0 && (
+        <ol className="space-y-1.5">
+          {earth.events.map((e, j) => (
+            <li
+              key={`${e.t}-${j}`}
+              className={`rounded-md px-2.5 py-1.5 leading-snug transition-colors ${
+                j === curIdx ? "bg-sky-400/15 text-white" : j < curIdx ? "text-zinc-300" : "text-zinc-500"
+              }`}
+            >
+              <span className={`mr-1.5 font-mono text-[11px] ${j <= curIdx ? "text-sky-300" : "text-zinc-600"}`}>{when(e.t, unit)}</span>
+              {e.text}
+            </li>
+          ))}
+        </ol>
+      )}
+      {earth.series.length > 0 && (
+        <div className="space-y-3">
+          {earth.series.slice(0, 4).map((s) => (
+            <Gauge key={s.name} s={s} i={i} />
+          ))}
         </div>
       )}
-      <div className="space-y-2.5">
-        {earth.series.slice(0, 4).map((s) => (
-          <Gauge key={s.name} s={s} i={i} />
-        ))}
-      </div>
-      {earth.note && <p className="mt-2 text-[10px] leading-snug text-zinc-500">{earth.note}</p>}
+      {earth.note && <p className="text-[11px] leading-snug text-zinc-500">{earth.note}</p>}
     </div>
   );
 }

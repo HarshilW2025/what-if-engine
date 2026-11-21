@@ -233,7 +233,7 @@ def orbit_summary(res: dict) -> dict:
     t = res.get("times", [])
     return {"duration": t[-1] if t else None, "units": res.get("units"), "distances": rows[:20],
             "closest_pairs_au": [{"a": a, "b": b, "min_au": m} for m, a, b in pairs[:5]],
-            "events": res.get("events", [])[:10],
+            "events": res.get("events", [])[:10], "change": res.get("change"),
             "energy_error_rel": res.get("diagnostics", {}).get("energy_error_rel")}
 
 

@@ -58,6 +58,17 @@ def add(entry: dict) -> None:
     load(force=True)
 
 
+def replace(entry: dict) -> None:
+    """Swaps in a new verified answer for the same question, dropping the old one."""
+    n = norm(entry["question"])
+    with _lock:
+        lines = BANK_FILE.read_text().splitlines() if BANK_FILE.exists() else []
+        keep = [l for l in lines if l.strip() and norm(json.loads(l)["question"]) != n]
+        keep.append(json.dumps(entry))
+        BANK_FILE.write_text("\n".join(keep) + "\n")
+    load(force=True)
+
+
 def has(question: str) -> bool:
     n = norm(question)
     return any(norm(e["question"]) == n for e in load())

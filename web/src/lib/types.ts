@@ -64,6 +64,7 @@ export interface GravityResult {
   answer?: string;
   explanation?: string;
   earth?: EarthPanel | null;
+  change?: { t: number; label: string } | null;
   numbers?: { name: string; value: number; unit: string; note: string }[];
 }
 
@@ -127,6 +128,7 @@ export interface SceneResult {
   answer?: string;
   explanation?: string;
   earth?: EarthPanel | null;
+  change?: { t: number; label: string } | null;
   diagnostics: { runtime_s: number; checks: SceneCheck[]; log: string; grounding?: { numbers: number; ungrounded: number[] } };
 }
 

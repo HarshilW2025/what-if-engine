@@ -32,6 +32,18 @@ class Body(_Strict):
     color: str | None = Field(default=None, pattern=r"^#[0-9a-fA-F]{6}$")
 
 
+class Change(_Strict):
+    """The what if moment. Before it, the system runs exactly as it is today."""
+    t_yr: float = Field(gt=0, description="when the what if happens, 10 to 30% into the run")
+    label: str = Field(min_length=1, max_length=120, description="what happens, in plain words: 'The Sun vanishes'")
+    remove: list[str] = Field(default_factory=list, max_length=50, description="bodies that vanish")
+    mass_factor: dict[str, float] = Field(default_factory=dict, description="body name to mass multiplier (2 = twice as massive)")
+    speed_factor: dict[str, float] = Field(default_factory=dict, description="body name to speed multiplier relative to the most massive other body (0 stops it)")
+    moves: list[Body] = Field(default_factory=list, max_length=50, description="existing bodies given a new mass, position and velocity, relative to relative_to")
+    appear: list[str] = Field(default_factory=list, max_length=50, description="names of bodies in bodies that only exist after the change; their pos_au and vel_au_yr are relative to relative_to")
+    relative_to: str | None = Field(default=None, description="body that moves and appear are placed relative to; none means the centre of mass frame")
+
+
 class GravityParams(_Strict):
     engine: Literal["gravity"] = "gravity"
     bodies: list[Body] = Field(min_length=1, max_length=200)
@@ -43,6 +55,7 @@ class GravityParams(_Strict):
     collisions: Literal["none", "merge"] = "merge"
     g_scale: float = Field(default=1.0, gt=0, le=1e3, description="multiplies G")
     mond: bool = Field(default=False, description="theory tier: Milgrom force law")
+    change: Change | None = Field(default=None, description="the what if moment: today's system runs first, then this happens")
 
     @model_validator(mode="after")
     def _check(self) -> "GravityParams":
@@ -51,6 +64,20 @@ class GravityParams(_Strict):
         names = [b.name for b in self.bodies]
         if len(set(names)) != len(names):
             raise ValueError("body names must be unique")
+        c = self.change
+        if c is not None:
+            used = set(c.remove) | set(c.mass_factor) | set(c.speed_factor) | {b.name for b in c.moves} | set(c.appear) | ({c.relative_to} if c.relative_to else set())
+            unknown = used - set(names)
+            if unknown:
+                raise ValueError(f"change names unknown bodies: {sorted(unknown)}")
+            if c.t_yr >= self.duration_yr:
+                raise ValueError("change.t_yr must be inside the run")
+            if c.relative_to and c.relative_to in set(c.remove) | set(c.appear):
+                raise ValueError("relative_to must exist at the moment of the change")
+            if any(k < 0 for k in [*c.mass_factor.values(), *c.speed_factor.values()]):
+                raise ValueError("mass_factor and speed_factor must be 0 or more")
+            if not any(b.mass_msun > 0 for b in self.bodies if b.name not in c.appear):
+                raise ValueError("before the change at least one body must have mass")
         return self
 
 

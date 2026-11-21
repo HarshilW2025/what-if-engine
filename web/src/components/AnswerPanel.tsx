@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { fmt } from "@/lib/fmt";
+import OnEarth from "./OnEarth";
 import type { SimResponse, Theory } from "@/lib/types";
 
 const SUPPORT: Record<Theory["support"], string> = {
@@ -33,6 +34,7 @@ export default function AnswerPanel({ resp }: { resp: SimResponse }) {
   const grounding = result.diagnostics.grounding;
   const assumptions = spec.assumptions ?? [];
   const explanation = result.explanation?.trim() ?? "";
+  const earth = result.earth && (result.earth.series.length > 0 || result.earth.events.length > 0) ? result.earth : null;
 
   return (
     <div className="space-y-6 text-sm">
@@ -75,6 +77,12 @@ export default function AnswerPanel({ resp }: { resp: SimResponse }) {
           </ul>
         )}
       </Section>
+
+      {earth && (
+        <Section title="On Earth">
+          <OnEarth earth={earth} times={result.times} unit={result.engine === "gravity" ? "yr" : result.time_unit} />
+        </Section>
+      )}
 
       {explanation && (
         <Section title="Detailed explanation">

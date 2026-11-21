@@ -32,8 +32,9 @@ def main() -> None:
     ap.add_argument("--workers", type=int, default=6)
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--questions", nargs="*", default=None, help="bank these questions instead of the list")
+    ap.add_argument("--rebuild", action="store_true", help="rebuild these questions even if banked; the new answer replaces the old only if it passes")
     a = ap.parse_args()
-    todo = [q for q in (a.questions or QUESTIONS) if not bank.has(q)]
+    todo = [q for q in (a.questions or QUESTIONS) if a.rebuild or not bank.has(q)]
     if a.limit:
         todo = todo[: a.limit]
     print(f"Bank has {len(bank.load())} entries; {len(todo)} questions to try; budget ${a.budget:.2f}\n", flush=True)
@@ -69,7 +70,7 @@ def main() -> None:
                 avg = 0.7 * avg + 0.3 * c if done > 1 else c
                 entry = bank.entry_from(q, out) if out else None
                 if entry:
-                    bank.add(entry)
+                    (bank.replace if a.rebuild else bank.add)(entry)
                     kept += 1
                 status = "KEPT" if entry else ("ERR " if err else "SKIP")
                 print(f"[{status}] {dt:4.0f}s ${c:.2f} (total ${spent:.2f})  {q}" + (f"\n        {err}" if err else ""), flush=True)

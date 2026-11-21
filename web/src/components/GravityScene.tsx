@@ -1,6 +1,5 @@
 "use client";
 
-import OnEarth from "./OnEarth";
 import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { Bloom, EffectComposer, ToneMapping, Vignette } from "@react-three/postprocessing";
@@ -12,6 +11,7 @@ import { usePlayer } from "@/lib/store";
 import type { BodyInfo, GravityResult, MergeEvent, Vec3 } from "@/lib/types";
 import { BlackHoleVisual } from "./scene/blackHole";
 import { CompactStar, compactKind } from "./scene/compact";
+import { Atmosphere, atmosphereFor } from "./scene/atmosphere";
 import { Ring, Safe, lookFor, type Look } from "./scene/looks";
 import { MAX_STARS, PLANET_FRAG, PLANET_VERT } from "./scene/planetShaders";
 import { SKY_FRAG, SKY_VERT, STAR_FRAG, STAR_VERT, TRAIL_FRAG, TRAIL_VERT } from "./scene/shaders";
@@ -299,6 +299,10 @@ type SurfaceProps = {
 
 /** planet surface lit by the simulation's own stars; temperature is computed from their flux */
 function PlanetSurface({ info, kind, stars, slots, temps, meshRef, textures, children }: SurfaceProps & { textures: THREE.Texture[] | null; children?: ReactNode }) {
+  const atmo = useMemo(
+    () => atmosphereFor(info.name, kind === 0 ? "earth" : kind === 2 ? "gas" : info.mass_msun < 0.05 * M_EARTH ? "none" : "rocky", info.color),
+    [info, kind],
+  );
   const effKind: Kind = (kind === 0 || kind === 3) && !textures ? 1 : kind;
   const mat = useMemo(
     () =>
@@ -375,6 +379,11 @@ function PlanetSurface({ info, kind, stars, slots, temps, meshRef, textures, chi
   return (
     <mesh ref={meshRef} material={mat}>
       <sphereGeometry args={[1, 96, 64]} />
+      {atmo && (
+        <Safe fallback={null}>
+          <Atmosphere spec={atmo} />
+        </Safe>
+      )}
       {children}
     </mesh>
   );
@@ -750,11 +759,6 @@ export default function GravityScene({ res }: { res: GravityResult }) {
       </div>
 
       <ViewChips res={res} />
-      {res.earth && (res.earth.series.length > 0 || res.earth.events.length > 0) && (
-        <div style={{ position: "absolute", right: 12, top: 12, maxHeight: "calc(100% - 200px)", overflowY: "auto" }}>
-          <OnEarth earth={res.earth} times={res.times} unit="yr" />
-        </div>
-      )}
       <ZoomButtons />
     </div>
   );

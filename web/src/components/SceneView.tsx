@@ -10,9 +10,9 @@ import { fmt } from "@/lib/fmt";
 import { usePlayer } from "@/lib/store";
 import type { Num, SceneBody, SceneCloud, SceneCurve, SceneResult } from "@/lib/types";
 import { ZoomButtons, ZoomInput } from "./GravityScene";
-import OnEarth from "./OnEarth";
 import { BlackHoleVisual } from "./scene/blackHole";
 import { CompactStar, compactKind } from "./scene/compact";
+import { Atmosphere, atmosphereFor } from "./scene/atmosphere";
 import { Ring, Safe, lookFor, type Look } from "./scene/looks";
 import { MAX_STARS, PLANET_FRAG, PLANET_VERT } from "./scene/planetShaders";
 import { SKY_FRAG, SKY_VERT, STAR_FRAG, STAR_VERT } from "./scene/shaders";
@@ -232,6 +232,10 @@ type PlanetProps = { res: SceneResult; index: number; slots: Slots<THREE.Group>;
 function PlanetBody({ res, index, slots, starIdx, meshRef, textures, children }: PlanetProps & { textures: THREE.Texture[] | null; children?: ReactNode }) {
   const b = res.bodies[index];
   const F = res.times.length;
+  const atmo = useMemo(
+    () => atmosphereFor(b.name, b.kind === "earth" ? "earth" : b.kind === "planet" ? "rocky" : "none", b.color, b.temperature?.find((x) => x != null)),
+    [b],
+  );
   const kind = textures ? (textures.length === 1 ? 3 : 0) : 1; // 0 Earth maps, 3 real imagery, 1 procedural
   const mat = useMemo(
     () =>
@@ -292,6 +296,11 @@ function PlanetBody({ res, index, slots, starIdx, meshRef, textures, children }:
   return (
     <mesh ref={meshRef} material={mat}>
       <sphereGeometry args={[1, 96, 64]} />
+      {atmo && (
+        <Safe fallback={null}>
+          <Atmosphere spec={atmo} />
+        </Safe>
+      )}
       {children}
     </mesh>
   );
@@ -686,7 +695,7 @@ function SceneCamera({ res, slots, geoms }: { res: SceneResult; slots: Slots<THR
       }
       if (locked && fi >= 0) {
         const fr = sampleNum(res.bodies[fi].radius, i, j, t, 0);
-        if (fr > 0) r = Math.min(Math.max(r, fr * 2.5), fr * 60);
+        if (fr > 0) r = s.focus != null ? fr * 1.6 : Math.min(Math.max(r, fr * 2.5), fr * 60); // a chip click frames that body; the model's own focus keeps context
       }
       if (!(r > 0)) r = 1;
       const want = r * 2.4 * s.zoom;
@@ -796,13 +805,11 @@ function Spark({ s, i }: { s: SceneResult["series"][number]; i: number }) {
 
 function SeriesPanel({ res }: { res: SceneResult }) {
   const playhead = usePlayer((s) => s.playhead);
-  const earth = res.earth && (res.earth.series.length > 0 || res.earth.events.length > 0) ? res.earth : null;
-  if (!res.series.length && !earth) return null;
+  if (!res.series.length) return null;
   const { i } = cursor(res.times.length, Math.round(playhead));
   return (
     <div style={{ position: "absolute", right: 12, top: 12, width: 288, maxHeight: "calc(100% - 200px)", overflowY: "auto", display: "flex", flexDirection: "column", gap: 8 }}>
-      {earth && <OnEarth earth={earth} times={res.times} unit={res.time_unit} />}
-      {res.series.slice(0, earth ? 2 : 4).map((s) => (
+      {res.series.slice(0, 4).map((s) => (
         <Spark key={s.name} s={s} i={i} />
       ))}
     </div>

@@ -138,6 +138,13 @@ def ask(question: str, progress=None, hint: dict | None = None) -> dict:
         try:
             if block.name == TOOL_ORBITS:
                 spec = ScenarioSpec.model_validate(block.input).model_copy(update={"question": question})
+                _p = spec.params
+                if getattr(_p, "engine", "") == "gravity" and attempt < MAX_ATTEMPTS:
+                    if _p.change is None:
+                        raise EngineError("no before and after: add params.change so today's real system runs first and the what if happens at change.t_yr, 10 to 30% into the run (a label only change is fine when nothing is modified)")
+                    _f = _p.change.t_yr / _p.duration_yr
+                    if not 0.08 <= _f <= 0.6:
+                        raise EngineError(f"the change happens {100 * _f:.0f}% into the run; put it 10 to 30% in so today's system is shown first")
                 out = run_spec(spec)
                 res = out.get("result", {})
                 if res.get("engine") == "gravity":
@@ -190,6 +197,19 @@ def ask(question: str, progress=None, hint: dict | None = None) -> dict:
                             "value": 0.0, "expected": 1.0, "rtol": 0.0, "atol": 0.0, "passed": False, "source": "format"}
                     scene["diagnostics"]["checks"].append(miss)
                     failed.append(miss)
+                _chg, _tt = scene.get("change"), scene.get("times") or []
+                if not _chg:
+                    miss = {"name": "No before and after: show today's unchanged reality first (10 to 30% of the frames, with a 'Today: ...' caption), then call s.change(t, text) at the moment the what if happens",
+                            "value": 0.0, "expected": 1.0, "rtol": 0.0, "atol": 0.0, "passed": False, "source": "format"}
+                    scene["diagnostics"]["checks"].append(miss)
+                    failed.append(miss)
+                else:
+                    _frac = sum(1 for x in _tt if x < _chg["t"]) / max(len(_tt) - 1, 1)
+                    if not 0.08 <= _frac <= 0.6:
+                        miss = {"name": f"The change happens {100 * _frac:.0f}% of the way into the frames: give today's unchanged reality 10 to 30% of the frames first",
+                                "value": float(_frac), "expected": 0.2, "rtol": 0.0, "atol": 0.0, "passed": False, "source": "format"}
+                        scene["diagnostics"]["checks"].append(miss)
+                        failed.append(miss)
                 if m.tier == "theory" and m.theories:
                     rank = {"consensus": 4, "mainstream-candidate": 3, "significant-minority": 2, "minority": 1, "fringe": 0}
                     sim = next((t for t in m.theories if t.simulated), None)

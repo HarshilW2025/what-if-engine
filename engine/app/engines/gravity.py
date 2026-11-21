@@ -155,7 +155,10 @@ def build_simulation(p: GravityParams, perturb: float = 0.0):
     sim = rebound.Simulation()
     sim.G = 4 * math.pi ** 2 * p.g_scale
     sim.integrator = "ias15"
+    skip = set(p.change.appear) if p.change else set()
     for i, b in enumerate(p.bodies):
+        if b.name in skip:
+            continue
         x, y, z = b.pos_au
         if i == 0 and perturb:
             x += perturb
@@ -177,6 +180,51 @@ def build_simulation(p: GravityParams, perturb: float = 0.0):
         sim.additional_forces = forces
         sim.force_is_velocity_dependent = 1
     return sim, forces
+
+
+def _find(sim, name):
+    h = rebound.hash(name).value
+    for pt in sim.particles:
+        if pt.hash.value == h:
+            return pt
+    return None
+
+
+def apply_change(sim, p: GravityParams) -> None:
+    """The what if moment: scale masses and speeds, move bodies, remove bodies, add bodies."""
+    c = p.change
+    for name, k in c.mass_factor.items():
+        pt = _find(sim, name)
+        if pt is not None:
+            pt.m *= k
+    for name, k in c.speed_factor.items():
+        pt = _find(sim, name)
+        if pt is None:
+            continue
+        others = [q for q in sim.particles if q.hash.value != pt.hash.value]
+        if not others:
+            continue
+        ref = max(others, key=lambda q: q.m)
+        pt.vx, pt.vy, pt.vz = ref.vx + k * (pt.vx - ref.vx), ref.vy + k * (pt.vy - ref.vy), ref.vz + k * (pt.vz - ref.vz)
+    base = _find(sim, c.relative_to) if c.relative_to else None
+    o = (base.x, base.y, base.z, base.vx, base.vy, base.vz) if base is not None else (0.0,) * 6
+    for b in c.moves:
+        pt = _find(sim, b.name)
+        if pt is None:
+            continue
+        pt.m = b.mass_msun
+        pt.x, pt.y, pt.z = o[0] + b.pos_au[0], o[1] + b.pos_au[1], o[2] + b.pos_au[2]
+        pt.vx, pt.vy, pt.vz = o[3] + b.vel_au_yr[0], o[4] + b.vel_au_yr[1], o[5] + b.vel_au_yr[2]
+    for name in c.remove:
+        if _find(sim, name) is not None:
+            sim.remove(hash=name)
+    for b in p.bodies:
+        if b.name in c.appear:
+            sim.add(m=b.mass_msun, x=o[0] + b.pos_au[0], y=o[1] + b.pos_au[1], z=o[2] + b.pos_au[2],
+                    vx=o[3] + b.vel_au_yr[0], vy=o[4] + b.vel_au_yr[1], vz=o[5] + b.vel_au_yr[2],
+                    r=b.radius_au or default_radius(b.mass_msun), hash=b.name)
+    if hasattr(sim, "integrator_reset"):
+        sim.integrator_reset()
 
 
 def _relative_error(now, start):
@@ -218,11 +266,25 @@ def run_gravity(p: GravityParams) -> dict:
     max_dl = 0.0
     positions: list[list] = []
     events: list[dict] = []
-    alive_prev = set(range(n_b))
+    appear = set(p.change.appear) if p.change else set()
+    alive_prev = {i for i, nm in enumerate(names) if nm not in appear}
+    pending = p.change is not None
     horizon = None
     truncated = False
 
     for f, t in enumerate(times):
+        if pending and t >= p.change.t_yr:
+            try:
+                sim.integrate(float(p.change.t_yr))
+                apply_change(sim, p)
+            except Exception as exc:
+                raise EngineError(f"Applying the change at t = {p.change.t_yr:.4g} yr failed: {exc}") from exc
+            pending = False
+            want_horizon = False  # the twin run does not replay the change
+            gone = {names.index(nm) for nm in p.change.remove if nm in names}
+            alive_prev = (alive_prev - gone) | {names.index(nm) for nm in p.change.appear if nm in names}
+            e0 = sim.energy()
+            l0 = sim.angular_momentum()
         if t > 0:
             try:
                 sim.integrate(float(t))
@@ -293,6 +355,7 @@ def run_gravity(p: GravityParams) -> dict:
         "times": [float(t) for t in times],
         "positions": [[f32(v) for v in fr] for fr in positions],
         "events": events,
+        "change": ({"t": float(p.change.t_yr), "label": p.change.label, "removed": list(p.change.remove), "appeared": list(p.change.appear)} if p.change else None),
         "diagnostics": {
             "integrator": "IAS15 (REBOUND)",
             "physics": physics,

@@ -244,6 +244,12 @@ class Scene:
             return None
         return {"series": [{**s, "values": _q(s["values"])} for s in se], "events": sorted(ev, key=lambda x: x["t"])[:8], "note": ""}
 
+    def change(self, t, text):
+        """The moment the what if happens. Everything before it shows today's unchanged reality."""
+        t = float(min(max(float(t), float(self.t[0])), float(self.t[-1])))
+        self._change = {"t": t, "label": str(text)[:120]}
+        return self
+
     def camera(self, focus=None, view="free"):
         if view not in VIEWS:
             raise ValueError(f"view must be one of {VIEWS}")
@@ -295,6 +301,7 @@ class Scene:
             "camera": self._camera,
             "answer": getattr(self, "_answer", ""),
             "explanation": getattr(self, "_explanation", ""),
+            "change": getattr(self, "_change", None),
             "earth": self._earth_out(),
         }
 

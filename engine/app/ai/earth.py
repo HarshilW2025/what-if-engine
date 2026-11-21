@@ -1,5 +1,6 @@
 """What people on Earth would feel and see, computed directly from a gravity run. No model writes these numbers."""
 import logging
+import math
 import warnings
 
 import numpy as np
@@ -11,8 +12,13 @@ MOON_MSUN = 3.694e-8
 MOON_AU = 0.00257
 SUN_TIDE_SHARE = 0.46  # today the Sun raises 46% as much tide as the Moon
 T_TODAY_K = 288.15  # Earth's average surface temperature today, 15 °C
-NOTE = ("Estimates computed from the orbits: temperature from the sunlight balance with today's air and "
-        "reflectivity (no climate feedbacks or heat storage), tides from the distances of the Moon and stars.")
+SIGMA = 5.670374419e-8
+ABSORBED_TODAY = 0.7 * 1361.0 / 4  # W/m², sunlight absorbed per square metre of Earth today
+EMISSIVITY = ABSORBED_TODAY / (SIGMA * T_TODAY_K**4)  # effective value, so today balances at 15 °C
+HEAT_CAPACITY = 4.18e6 * 50  # J/m²/K, a 50 m ocean mixed layer stores the heat
+YEAR_S = 3.15576e7
+NOTE = ("Estimates computed from the orbits: temperature from the sunlight balance with today's air and reflectivity, "
+        "with a 50 m ocean layer storing heat (no other climate feedbacks); tides from the distances of the Moon and stars.")
 
 
 def luminosity(m: float) -> float:
@@ -26,6 +32,28 @@ def luminosity(m: float) -> float:
     if m < 55:
         return 1.4 * m**3.5
     return 32000.0 * m
+
+
+def lagged_temperature(t_yr, sun_rel):
+    """Average surface temperature in °C. The ocean stores heat, so Earth warms and cools over months, not instantly."""
+    T = np.full(len(sun_rel), np.nan)
+    ok = np.isfinite(sun_rel)
+    if not ok.any():
+        return T
+    k0 = int(np.argmax(ok))
+    cur = max(T_TODAY_K * max(float(sun_rel[k0]), 0.0) ** 0.25, 3.0)  # starts in balance
+    T[k0] = cur
+    for k in range(k0 + 1, len(sun_rel)):
+        if not ok[k]:
+            break
+        dt = max(float(t_yr[k] - t_yr[k - 1]), 0.0) * YEAR_S
+        n = min(400, max(1, math.ceil(dt / (0.02 * YEAR_S))))
+        h = dt / n
+        q = ABSORBED_TODAY * max(float(sun_rel[k]), 0.0)
+        for _ in range(n):  # implicit in the radiation term, so it stays stable at any step size
+            cur = max(cur + h * (q - EMISSIVITY * SIGMA * cur**4) / (HEAT_CAPACITY + 4 * EMISSIVITY * SIGMA * cur**3 * h), 3.0)
+        T[k] = cur
+    return T - 273.15
 
 
 def _positions(res):
@@ -65,6 +93,7 @@ def _earth(res):
     alive = np.isfinite(P[:, e]).all(axis=1)
     if not alive.any():
         return None
+    ch = res.get("change") or None
 
     def dist(i):
         return np.linalg.norm(P[:, i] - P[:, e], axis=1)
@@ -87,7 +116,7 @@ def _earth(res):
             near = np.nanmin(ds, axis=1)
             sun[~alive] = np.nan
             near[~alive] = np.nan
-            temp = T_TODAY_K * sun**0.25 - 273.15
+            temp = lagged_temperature(t if len(t) == len(sun) else np.arange(len(sun), dtype=float), sun)
             series += [("Average temperature", "°C", temp, 15.0), ("Sunlight vs today", "%", 100 * sun, 100.0)]
         if moons or heavy:
             zero = np.zeros(len(P))
@@ -99,8 +128,10 @@ def _earth(res):
         if near is not None:
             series.append(("Distance to nearest star", "AU", near, 1.0))
 
-        if temp is not None:
+        if temp is not None and np.isfinite(temp[k0]):
             events.append({"t": tt(k0), "text": f"Start: average {temp[k0]:.0f} °C, sunlight {100 * sun[k0]:.0f}% of today"})
+        if ch:
+            events.append({"t": float(ch["t"]), "text": str(ch["label"])})
 
         def cross(arr, th, up, msg):
             if arr is None or not np.isfinite(arr[k0]):
@@ -120,7 +151,8 @@ def _earth(res):
             cross(near, 30, True, "Earth passes {v:.0f} AU from its star: the Sun is just a bright star now")
         if not alive[-1]:
             k = int(np.where(alive)[0][-1]) + 1
-            events.append({"t": tt(min(k, len(alive) - 1)), "text": "Earth is destroyed or swallowed by another body"})
+            vanished = ch and bodies[e].get("name") in (ch.get("removed") or [])
+            events.append({"t": tt(min(k, len(alive) - 1)), "text": "Earth vanishes" if vanished else "Earth is destroyed or swallowed by another body"})
 
     if not series and not events:
         return None
