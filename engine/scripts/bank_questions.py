@@ -77,3 +77,45 @@ QUESTIONS = [
     "What is the mass of love?", "What if time was purple?", "What if dragons were real?", "What does the Sun eat for breakfast?",
     "What is the meaning of life?", "What if magic existed?", "What if cats ruled the world?", "What if dinosaurs never went extinct?",
 ]
+
+# round two: gaps from round one
+QUESTIONS += [
+    # moons and planets
+    "What if Titan orbited Earth?", "What if Io orbited Earth instead of the Moon?", "What if Mars had a moon as big as ours?",
+    "What if Venus spun as fast as Earth?", "What if Mars were as big as Earth?", "What if Uranus and Neptune swapped places?",
+    "What if the asteroid belt formed a planet?", "What if Halley's Comet hit Earth?", "What if the Moon were as close as it was 4 billion years ago?",
+    "What if Neptune orbited as close as Earth?", "What if Pluto were as big as Earth?", "What if Saturn were as close as the Moon?",
+    "What if Jupiter were twice as massive?", "What if Earth had a ring of debris from a shattered Moon?", "What if Europa's ocean froze solid?",
+    # Sun and space weather
+    "What if a Carrington-sized solar storm hit today?", "What if a solar flare were 100 times stronger?", "What if the Sun were 10% brighter?",
+    "What if the Sun moved 1% closer to Earth?", "What if there were a total solar eclipse every day?", "What if the Sun suddenly lost 1% of its mass?",
+    "What if the Sun flickered like a red dwarf?", "What if the Sun's magnetic field flipped tomorrow?",
+    # Earth
+    "What if Earth's day were 48 hours long?", "What if Earth's day were 1 hour long?", "What if Earth's magnetic field disappeared?",
+    "What if all the ice on Earth melted?", "What if the oceans were twice as deep?", "What if Earth's core cooled completely?",
+    "What if Mount Everest were 100 km tall?", "What if Earth's orbit were perfectly circular?", "What if Earth were tidally locked to the Sun?",
+    "What if a year on Earth lasted 10 days?", "What if Earth had no Moon to make tides?",
+    # space travel and people
+    "What if you were in space without a spacesuit?", "What if the International Space Station fell?", "What if you drilled a hole to the centre of the Earth?",
+    "What if you dropped a bowling ball from the International Space Station?", "What if Voyager 1 turned around and came home?",
+    "What if you launched a rocket straight up at escape velocity?", "What if a space elevator snapped?", "What if you fell into Jupiter?",
+    "What if you stood on the surface of Venus?", "What if you jumped off Olympus Mons?", "What if you fell into the Sun?",
+    "What if you threw a ball on a spinning space station?", "What if you lived on a planet with 10 times Earth's gravity?",
+    "What if you rode an elevator to the Moon?", "What if a plane flew around the equator at the speed of sound?",
+    # stars and galaxies
+    "What if Sirius went supernova?", "What if Earth orbited a neutron star?", "What if Earth orbited close to a spinning black hole?",
+    "What if the Milky Way's central black hole were 1,000 times heavier?", "What if a star passed 100 AU from the Sun?",
+    "What if we lived in a globular cluster?", "What if Earth were at the centre of the Milky Way?", "What if Vega exploded?",
+    "What if a hypervelocity star hit the Sun?", "What if Earth orbited a red dwarf?",
+    # light and relativity
+    "What if you watched a clock from a rocket at 99.9% of light speed?", "What if gravitational waves were strong enough to feel?",
+    "What if you shone a torch while moving at nearly light speed?", "What if photons had mass?", "What if sound travelled at the speed of light?",
+    # cosmology and theory
+    "What if the cosmological constant were negative?", "What if inflation never happened?", "What if matter and antimatter were equal?",
+    "What if the universe were twice as old?", "What if the fine structure constant were 10% larger?", "What if space had four dimensions?",
+    "What if neutrinos did not exist?", "What if gravity were the strongest force?", "What if we could see dark matter?",
+    # thought experiments
+    "What if the Sun were made of chocolate?", "What if Earth were made of cheese?", "What if the Moon were made of gold?",
+    "What if the oceans were made of mercury?", "What if Earth were made of styrofoam?", "What if Jupiter were made of water?",
+    "What if the Moon were hollow?", "What if Earth were a giant magnet a million times stronger?",
+]

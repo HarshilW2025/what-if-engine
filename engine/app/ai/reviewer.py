@@ -274,3 +274,7 @@ def _as_list(v) -> list[str]:
         parts = _re.split(r"</?item>", v) if "<item>" in v else [v]
         return [p.strip() for p in parts if p.strip()]
     return [str(p).strip() for p in v if str(p).strip()]
+
+
+# shared list repair
+from app.ai.coerce import as_list as _as_list  # noqa: E402,F811

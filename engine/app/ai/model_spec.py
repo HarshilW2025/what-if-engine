@@ -15,7 +15,16 @@ class Theory(BaseModel):
     card: str | None = Field(default=None, max_length=60)
 
 
+from pydantic import model_validator as _wie_mv
+from app.ai.coerce import fix_tool_input as _wie_fix
+
+
 class ModelSpec(BaseModel):
+    @_wie_mv(mode="before")
+    @classmethod
+    def _wie_fix_lists(cls, data):
+        return _wie_fix(cls, data)
+
     """A Claude-written physics model. tier 'theory' carries the competing scientific pictures."""
 
     model_config = ConfigDict(extra="forbid")
